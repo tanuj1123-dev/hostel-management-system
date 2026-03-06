@@ -1,4 +1,3 @@
-// backend/config/db.js
 const mysql = require('mysql2');
 
 const pool = mysql.createPool({
@@ -14,7 +13,6 @@ const pool = mysql.createPool({
 
 const db = pool.promise();
 
-// Test connection
 pool.getConnection((err, connection) => {
   if (err) {
     console.error("❌ Database connection failed:", err);
