@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Admin Dashboard — HostelHub</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">🏠</div>
+    <div class="brand-text">
+      <div class="b-name">Hostel<span>Hub</span></div>
+      <div class="b-role">Admin Panel</div>
+    </div>
+  </div>
+  <span class="nav-label">Main</span>
+  <a href="#" class="active" onclick="showSection('dashboard',this)"><span class="icon">📊</span> Dashboard</a>
+  <a href="#" onclick="showSection('applications',this)"><span class="icon">📋</span> Applications</a>
+  <a href="#" onclick="showSection('students',this)"><span class="icon">👥</span> Students</a>
+  <span class="nav-label">Management</span>
+  <a href="#" onclick="showSection('hostels-rooms',this)"><span class="icon">🏠</span> Hostels & Rooms</a>
+  <a href="#" onclick="showSection('create-user',this)"><span class="icon">➕</span> Create User</a>
+  <a href="#" onclick="showSection('change-password',this)"><span class="icon">🔑</span> Change Password</a>
+  <div class="sidebar-footer">
+    <div class="user-chip">
+      <div class="avatar" id="sideAvatar">A</div>
+      <div class="user-info">
+        <div class="u-name" id="sideName">Admin</div>
+        <div class="u-role">Administrator</div>
+      </div>
+      <button class="logout-btn" onclick="logout()" title="Logout">⏻</button>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- DASHBOARD -->
+  <section id="sec-dashboard">
+    <div class="topbar">
+      <div><h1>Dashboard</h1><p id="greetMsg">Welcome back, Admin</p></div>
+    </div>
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card"><div class="s-icon s-teal">👥</div><div class="s-val" id="s-students">—</div><div class="s-label">Total Students</div></div>
+      <div class="stat-card"><div class="s-icon s-gold">📋</div><div class="s-val" id="s-pending">—</div><div class="s-label">Pending Applications</div></div>
+      <div class="stat-card"><div class="s-icon s-green">🏠</div><div class="s-val" id="s-rooms">—</div><div class="s-label">Total Rooms</div></div>
+      <div class="stat-card"><div class="s-icon s-coral">🔧</div><div class="s-val" id="s-complaints">—</div><div class="s-label">Open Complaints</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>Recent Applications</h3><button class="btn btn-sm btn-secondary" onclick="showSection('applications',null)">View All</button></div>
+      <div id="recentAppsWrap"></div>
+    </div>
+  </section>
+
+  <!-- APPLICATIONS -->
+  <section id="sec-applications" style="display:none">
+    <div class="topbar">
+      <div><h1>Hostel Applications</h1><p>Review and approve student hostel requests</p></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>All Applications</h3></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Student</th><th>Roll No</th><th>Dept / Year</th><th>Applied</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="appsTbody"><tr><td colspan="6" class="empty"><div class="e-icon">⏳</div>Loading...</td></tr></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- STUDENTS -->
+  <section id="sec-students" style="display:none">
+    <div class="topbar">
+      <div><h1>Students</h1><p>All registered students</p></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>Student List</h3></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Name</th><th>Email</th><th>Roll No</th><th>Dept</th><th>Hostel</th><th>Room</th></tr></thead>
+        <tbody id="studentsTbody"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- CREATE USER -->
+  <section id="sec-create-user" style="display:none">
+    <div class="topbar">
+      <div><h1>Create User</h1><p>Add admin, warden, accountant or maintenance staff</p></div>
+    </div>
+    <div class="panel" style="max-width:520px">
+      <div class="panel-head"><h3>New User</h3></div>
+      <div class="form-group"><label>Full Name</label><input type="text" id="cu-name" placeholder="Enter full name"></div>
+      <div class="form-group"><label>Email</label><input type="email" id="cu-email" placeholder="user@hostel.com"></div>
+      <div class="form-group"><label>Password</label><input type="password" id="cu-pass" placeholder="Min 6 characters"></div>
+      <div class="form-group"><label>Role</label>
+        <select id="cu-role">
+          <option value="student">Student</option>
+          <option value="warden">Warden</option>
+          <option value="accountant">Accountant</option>
+          <option value="maintenance">Maintenance</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="createUser()">Create User</button>
+      <div id="cu-msg" style="margin-top:12px;font-size:.82rem"></div>
+    </div>
+  </section>
+
+  <!-- HOSTELS & ROOMS -->
+  <section id="sec-hostels-rooms" style="display:none">
+    <div class="topbar">
+      <div><h1>Hostels & Rooms</h1><p>Add and manage hostels and rooms</p></div>
+    </div>
+
+    <!-- ADD HOSTEL FORM -->
+    <div class="panel" style="max-width:520px;margin-bottom:24px">
+      <div class="panel-head"><h3>➕ Add New Hostel</h3></div>
+      <div class="form-group"><label>Hostel Name</label><input type="text" id="h-name" placeholder="e.g. Boys Hostel Block A"></div>
+      <div class="form-group"><label>Hostel Type</label>
+        <select id="h-type">
+          <option value="boys">Boys</option>
+          <option value="girls">Girls</option>
+          <option value="mixed">Mixed</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="createHostel()">Add Hostel</button>
+    </div>
+
+    <!-- ALL HOSTELS TABLE -->
+    <div class="panel" style="margin-bottom:24px">
+      <div class="panel-head"><h3>All Hostels</h3><button class="btn btn-sm btn-secondary" onclick="loadHostelsTable()">🔄 Refresh</button></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Hostel Name</th><th>Type</th><th>Rooms Added</th></tr></thead>
+        <tbody id="hostelsTbody"></tbody>
+      </table></div>
+    </div>
+
+    <!-- ADD ROOM FORM -->
+    <div class="panel" style="max-width:520px;margin-bottom:24px">
+      <div class="panel-head"><h3>➕ Add New Room</h3></div>
+      <div class="form-group"><label>Select Hostel</label>
+        <select id="r-hostel"><option value="">-- Select Hostel --</option></select>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Room Number</label><input type="text" id="r-number" placeholder="e.g. 101"></div>
+        <div class="form-group"><label>Room Type</label>
+          <select id="r-type">
+            <option value="single">Single (1 student)</option>
+            <option value="double">Double (2 students)</option>
+            <option value="triple">Triple (3 students)</option>
+            <option value="quad">Quad (4 students)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Capacity (beds)</label><input type="number" id="r-capacity" placeholder="e.g. 2" min="1" max="10"></div>
+      <button class="btn btn-primary" onclick="createRoom()">Add Room</button>
+    </div>
+
+    <!-- ALL ROOMS TABLE -->
+    <div class="panel">
+      <div class="panel-head"><h3>All Rooms</h3><button class="btn btn-sm btn-secondary" onclick="loadRoomsTable()">🔄 Refresh</button></div>
+
+      <!-- FILTER BAR -->
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+        <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:180px">
+          <label style="font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);white-space:nowrap">🏠 Hostel</label>
+          <select id="filter-hostel" onchange="renderRoomsTable()" style="flex:1;padding:7px 10px;border-radius:8px;border:1px solid var(--border);background:var(--glass);color:inherit;font-size:.85rem">
+            <option value="">All Hostels</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:160px">
+          <label style="font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);white-space:nowrap">🛏 Type</label>
+          <select id="filter-type" onchange="renderRoomsTable()" style="flex:1;padding:7px 10px;border-radius:8px;border:1px solid var(--border);background:var(--glass);color:inherit;font-size:.85rem">
+            <option value="">All Types</option>
+            <option value="single">Single</option>
+            <option value="double">Double</option>
+            <option value="triple">Triple</option>
+            <option value="quad">Quad</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:160px">
+          <label style="font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);white-space:nowrap">✅ Status</label>
+          <select id="filter-status" onchange="renderRoomsTable()" style="flex:1;padding:7px 10px;border-radius:8px;border:1px solid var(--border);background:var(--glass);color:inherit;font-size:.85rem">
+            <option value="">All</option>
+            <option value="available">Available</option>
+            <option value="full">Full</option>
+          </select>
+        </div>
+        <div id="rooms-count" style="font-size:.78rem;color:var(--muted);white-space:nowrap"></div>
+      </div>
+
+      <div class="tbl-wrap"><table>
+        <thead><tr>
+          <th onclick="sortRooms('hostel_name')" style="cursor:pointer;user-select:none">Hostel <span id="sort-hostel_name">↕</span></th>
+          <th onclick="sortRooms('room_number')" style="cursor:pointer;user-select:none">Room No <span id="sort-room_number">↕</span></th>
+          <th onclick="sortRooms('type')" style="cursor:pointer;user-select:none">Type <span id="sort-type">↕</span></th>
+          <th onclick="sortRooms('capacity')" style="cursor:pointer;user-select:none">Capacity <span id="sort-capacity">↕</span></th>
+          <th>Occupied</th>
+          <th onclick="sortRooms('avail')" style="cursor:pointer;user-select:none">Available <span id="sort-avail">↕</span></th>
+          <th>Assigned Students</th>
+        </tr></thead>
+        <tbody id="roomsTbody"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- CHANGE PASSWORD -->
+  <section id="sec-change-password" style="display:none">
+    <div class="topbar">
+      <div><h1>Change Password</h1><p>Update your login password</p></div>
+    </div>
+    <div class="panel" style="max-width:460px">
+      <div class="panel-head"><h3>Update Password</h3></div>
+      <div class="form-group">
+        <label>Current Password</label>
+        <input type="password" id="cp-old" placeholder="Enter current password">
+      </div>
+      <div class="form-group">
+        <label>New Password</label>
+        <input type="password" id="cp-new" placeholder="Min 6 characters">
+      </div>
+      <div class="form-group">
+        <label>Confirm New Password</label>
+        <input type="password" id="cp-confirm" placeholder="Re-enter new password">
+      </div>
+      <div style="margin-bottom:18px">
+        <div style="font-size:.7rem;color:var(--muted);margin-bottom:6px">Password Strength</div>
+        <div style="height:6px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden">
+          <div id="strengthBar" style="height:100%;width:0%;border-radius:99px;transition:all .3s"></div>
+        </div>
+        <div id="strengthText" style="font-size:.72rem;margin-top:4px;color:var(--muted)"></div>
+      </div>
+      <button class="btn btn-primary" onclick="changePassword()">🔑 Update Password</button>
+      <div id="cp-msg" style="margin-top:14px;font-size:.83rem"></div>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<!-- APPROVE MODAL -->
+<div class="modal-overlay" id="approveModal">
+  <div class="modal">
+    <h3>✅ Approve Application</h3>
+    <input type="hidden" id="app-id">
+    <div class="form-group"><label>Select Hostel</label>
+      <select id="sel-hostel" onchange="loadRooms()"><option value="">-- Select Hostel --</option></select>
+    </div>
+    <div class="form-group"><label>Select Room</label>
+      <select id="sel-room"><option value="">-- Select Room --</option></select>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="btn btn-primary" onclick="submitApprove()">Approve & Assign</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+const API = '';
+
+// ── VALIDATION HELPERS ────────────────────────
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.border = '1.5px solid var(--coral)';
+  let err = el.parentNode.querySelector('.v-err');
+  if (!err) {
+    err = document.createElement('div');
+    err.className = 'v-err';
+    err.style.cssText = 'color:var(--coral);font-size:.72rem;margin-top:4px';
+    el.parentNode.appendChild(err);
+  }
+  err.textContent = '⚠️ ' + msg;
+}
+function clearError(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.border = '';
+  const err = el.parentNode.querySelector('.v-err');
+  if (err) err.remove();
+}
+function clearAllErrors(ids) { ids.forEach(clearError); }
+
+// ── AUTH CHECK ────────────────────────────────
+async function init() {
+  try {
+    const r = await fetch(`${API}/api/auth/me`, {credentials:'include'});
+    if (!r.ok) return window.location.href = 'login.html';
+    const u = await r.json();
+    if (u.role !== 'admin') return window.location.href = 'login.html';
+    document.getElementById('sideName').textContent = u.name;
+    document.getElementById('sideAvatar').textContent = u.name[0].toUpperCase();
+    document.getElementById('greetMsg').textContent = `Welcome back, ${u.name}`;
+    loadDashboard();
+  } catch { window.location.href = 'login.html'; }
+}
+
+async function logout() {
+  await fetch(`${API}/api/auth/logout`, {method:'POST', credentials:'include'});
+  window.location.href = 'login.html';
+}
+
+// ── SECTIONS ──────────────────────────────────
+function showSection(name, el) {
+  document.querySelectorAll('.main > section').forEach(s => s.style.display='none');
+  document.getElementById('sec-'+name).style.display = '';
+  document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+  if (el) el.classList.add('active');
+  if (name==='applications')  loadApplications();
+  if (name==='students')      loadStudents();
+  if (name==='create-user')   clearAllErrors(['cu-name','cu-email','cu-pass']);
+  if (name==='hostels-rooms') { loadHostelsTable(); loadRoomsTable(); loadHostelDropdown(); }
+}
+
+// ── DASHBOARD ─────────────────────────────────
+async function loadDashboard() {
+  const d = await fetchJSON('/api/admin/dashboard');
+  if (!d) return;
+  document.getElementById('s-students').textContent   = d.total_students;
+  document.getElementById('s-pending').textContent    = d.pending_apps;
+  document.getElementById('s-rooms').textContent      = d.total_rooms;
+  document.getElementById('s-complaints').textContent = d.pending_complaints;
+  loadRecentApps();
+}
+
+async function loadRecentApps() {
+  const apps = await fetchJSON('/api/admin/applications');
+  if (!apps) return;
+  document.getElementById('recentAppsWrap').innerHTML = buildAppsTable(apps.slice(0,5), true);
+}
+
+// ── APPLICATIONS ──────────────────────────────
+async function loadApplications() {
+  const apps = await fetchJSON('/api/admin/applications');
+  document.getElementById('appsTbody').innerHTML = apps?.length
+    ? apps.map(a => `
+      <tr>
+        <td><strong>${a.full_name}</strong><br><small style="color:var(--muted)">${a.email}</small></td>
+        <td><span class="chip">${a.roll_no}</span></td>
+        <td>${a.department} / Yr ${a.year}</td>
+        <td>${fmtDate(a.applied_at)}</td>
+        <td>${badge(a.status)}</td>
+        <td>
+          ${a.status==='pending' ? `
+            <button class="btn btn-sm btn-green" onclick="openApprove(${a.id})">✅ Approve</button>
+            <button class="btn btn-sm btn-danger" style="margin-left:6px" onclick="rejectApp(${a.id})">✗ Reject</button>
+          ` : a.status==='approved' ? `<span style="color:var(--muted);font-size:.78rem">Room: ${a.room_number||'—'}</span>` : '<span style="color:var(--muted);font-size:.78rem">—</span>'}
+        </td>
+      </tr>`).join('')
+    : `<tr><td colspan="6"><div class="empty"><div class="e-icon">📭</div><h4>No applications yet</h4></div></td></tr>`;
+}
+
+function buildAppsTable(apps, mini) {
+  if (!apps.length) return `<div class="empty"><div class="e-icon">📭</div><h4>No applications</h4></div>`;
+  return `<div class="tbl-wrap"><table>
+    <thead><tr><th>Student</th><th>Roll No</th><th>Dept</th><th>Status</th>${mini?'':'<th>Actions</th>'}</tr></thead>
+    <tbody>${apps.map(a=>`<tr>
+      <td>${a.full_name}</td><td><span class="chip">${a.roll_no}</span></td><td>${a.department}</td><td>${badge(a.status)}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+// ── APPROVE / REJECT ──────────────────────────
+async function openApprove(id) {
+  document.getElementById('app-id').value = id;
+  document.getElementById('approveModal').classList.add('show');
+  const hostels = await fetchJSON('/api/admin/hostels');
+  const sel = document.getElementById('sel-hostel');
+  sel.innerHTML = '<option value="">-- Select Hostel --</option>' +
+    hostels.map(h=>`<option value="${h.id}">${h.name}</option>`).join('');
+  document.getElementById('sel-room').innerHTML = '<option>-- Select Hostel First --</option>';
+}
+
+async function loadRooms() {
+  const hid = document.getElementById('sel-hostel').value;
+  if (!hid) return;
+  const rooms = await fetchJSON(`/api/admin/rooms/${hid}`);
+  document.getElementById('sel-room').innerHTML = rooms?.length
+    ? rooms.map(r=>`<option value="${r.id}">${r.room_number} (${r.type} — ${r.occupied}/${r.capacity})</option>`).join('')
+    : '<option>No available rooms</option>';
+}
+
+async function submitApprove() {
+  const id  = document.getElementById('app-id').value;
+  const hid = document.getElementById('sel-hostel').value;
+  const rid = document.getElementById('sel-room').value;
+  if (!hid || !rid) return toast('Select hostel and room', 'error');
+  const r = await fetchJSON(`/api/admin/applications/${id}/approve`, 'PUT', {hostel_id:hid, room_id:rid});
+  if (r) { toast(r.message, 'success'); closeModal(); loadApplications(); loadDashboard(); }
+}
+
+async function rejectApp(id) {
+  if (!confirm('Reject this application?')) return;
+  const r = await fetchJSON(`/api/admin/applications/${id}/reject`, 'PUT', {});
+  if (r) { toast(r.message, 'success'); loadApplications(); }
+}
+
+function closeModal() { document.getElementById('approveModal').classList.remove('show'); }
+
+// ── STUDENTS ──────────────────────────────────
+async function loadStudents() {
+  const students = await fetchJSON('/api/admin/students');
+  document.getElementById('studentsTbody').innerHTML = students?.length
+    ? students.map(s=>`<tr>
+        <td><strong>${s.name}</strong></td>
+        <td>${s.email}</td>
+        <td>${s.roll_no ? `<span class="chip">${s.roll_no}</span>` : '—'}</td>
+        <td>${s.department || '—'}</td>
+        <td>${s.hostel_name || '—'}</td>
+        <td>${s.room_number || '—'}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="6"><div class="empty"><div class="e-icon">👥</div><h4>No students found</h4></div></td></tr>';
+}
+
+// ── HOSTELS & ROOMS ───────────────────────────
+
+async function loadHostelDropdown() {
+  const hostels = await fetchJSON('/api/admin/hostels');
+  const sel = document.getElementById('r-hostel');
+  if (hostels?.length) {
+    sel.innerHTML = '<option value="">-- Select Hostel --</option>' +
+      hostels.map(h => `<option value="${h.id}">${h.name}</option>`).join('');
+  }
+}
+
+async function loadHostelsTable() {
+  const hostels = await fetchJSON('/api/admin/hostels');
+  const allRooms = await fetchJSON('/api/admin/all-rooms');
+  const roomCount = {};
+  allRooms?.forEach(r => { roomCount[r.hostel_id] = (roomCount[r.hostel_id] || 0) + 1; });
+
+  const typeLabel = { boys:'👦 Boys', girls:'👧 Girls', mixed:'👥 Mixed' };
+  document.getElementById('hostelsTbody').innerHTML = hostels?.length
+    ? hostels.map(h => `<tr>
+        <td><strong>${h.name}</strong></td>
+        <td>${typeLabel[h.type] || h.type}</td>
+        <td>${roomCount[h.id] || 0} room${(roomCount[h.id] || 0) !== 1 ? 's' : ''}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="3"><div class="empty"><div class="e-icon">🏠</div><h4>No hostels yet</h4></div></td></tr>`;
+}
+
+let allRoomsData  = [];
+let roomsSortKey  = 'hostel_name';
+let roomsSortDir  = 1; // 1 = asc, -1 = desc
+
+const TYPE_ORDER = { single:1, double:2, triple:3, quad:4 };
+
+async function loadRoomsTable() {
+  const rooms = await fetchJSON('/api/admin/all-rooms');
+  allRoomsData = rooms || [];
+
+  // Populate hostel filter from live data
+  const hostels = [...new Set(allRoomsData.map(r => r.hostel_name))].sort();
+  const fh = document.getElementById('filter-hostel');
+  const cur = fh.value;
+  fh.innerHTML = '<option value="">All Hostels</option>' +
+    hostels.map(h => `<option value="${h}" ${h===cur?'selected':''}>${h}</option>`).join('');
+
+  renderRoomsTable();
+}
+
+function renderRoomsTable() {
+  const fHostel = document.getElementById('filter-hostel').value;
+  const fType   = document.getElementById('filter-type').value;
+  const fStatus = document.getElementById('filter-status').value;
+
+  let data = allRoomsData.filter(r => {
+    const avail = r.capacity - r.occupied;
+    if (fHostel && r.hostel_name !== fHostel) return false;
+    if (fType   && r.type !== fType)          return false;
+    if (fStatus === 'available' && avail <= 0) return false;
+    if (fStatus === 'full'      && avail > 0)  return false;
+    return true;
+  });
+
+  // Sort
+  data.sort((a, b) => {
+    let av = a[roomsSortKey], bv = b[roomsSortKey];
+    if (roomsSortKey === 'type')  { av = TYPE_ORDER[a.type]||99; bv = TYPE_ORDER[b.type]||99; }
+    if (roomsSortKey === 'avail') { av = a.capacity - a.occupied; bv = b.capacity - b.occupied; }
+    if (typeof av === 'string') return av.localeCompare(bv) * roomsSortDir;
+    return (av - bv) * roomsSortDir;
+  });
+
+  // Update sort indicators
+  ['hostel_name','room_number','type','capacity','avail'].forEach(k => {
+    const el = document.getElementById('sort-'+k);
+    if (el) el.textContent = k === roomsSortKey ? (roomsSortDir === 1 ? '▲' : '▼') : '↕';
+  });
+
+  // Count
+  document.getElementById('rooms-count').textContent =
+    `Showing ${data.length} of ${allRoomsData.length} room${allRoomsData.length !== 1 ? 's' : ''}`;
+
+  document.getElementById('roomsTbody').innerHTML = data.length
+    ? data.map(r => {
+        const avail = r.capacity - r.occupied;
+        const pct   = Math.round((r.occupied / r.capacity) * 100);
+        const color = avail === 0 ? 'var(--coral)' : avail <= 1 ? 'var(--gold)' : 'var(--teal)';
+        const typeIcon = { single:'🛏', double:'🛏🛏', triple:'🛏🛏🛏', quad:'🛏×4' };
+        return `<tr>
+          <td><strong>${r.hostel_name}</strong></td>
+          <td><span class="chip">${r.room_number}</span></td>
+          <td>${typeIcon[r.type]||''} <span style="text-transform:capitalize">${r.type}</span></td>
+          <td style="text-align:center">${r.capacity}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="flex:1;height:6px;background:rgba(255,255,255,.1);border-radius:99px;overflow:hidden;min-width:60px">
+                <div style="height:100%;width:${pct}%;background:${color};border-radius:99px;transition:.3s"></div>
+              </div>
+              <span style="font-size:.8rem;color:${color}">${r.occupied}/${r.capacity}</span>
+            </div>
+          </td>
+          <td><span style="color:${color};font-weight:600">${avail > 0 ? avail + ' bed' + (avail > 1 ? 's' : '') : '<span class="badge b-rejected">Full</span>'}</span></td>
+          <td>${r.students
+            ? r.students.split('||').map(s => {
+                const [name, roll] = s.split(' (');
+                return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+                  <div style="width:24px;height:24px;border-radius:50%;background:var(--teal);color:#1a1a2e;font-size:.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${name.trim()[0].toUpperCase()}</div>
+                  <div>
+                    <div style="font-size:.82rem;font-weight:600;line-height:1.2">${name.trim()}</div>
+                    <div style="font-size:.7rem;color:var(--muted)">${roll ? roll.replace(')','') : '—'}</div>
+                  </div>
+                </div>`;
+              }).join('')
+            : `<span style="color:var(--muted);font-size:.78rem">— Vacant —</span>`}
+          </td>
+        </tr>`;
+      }).join('')
+    : `<tr><td colspan="7"><div class="empty"><div class="e-icon">🔍</div><h4>No rooms match your filters</h4></div></td></tr>`;
+}
+
+function sortRooms(key) {
+  if (roomsSortKey === key) roomsSortDir *= -1;
+  else { roomsSortKey = key; roomsSortDir = 1; }
+  renderRoomsTable();
+}
+
+async function createHostel() {
+  clearAllErrors(['h-name']);
+  const name = document.getElementById('h-name').value.trim();
+  const type = document.getElementById('h-type').value;
+
+  if (!name)               { showError('h-name', 'Hostel name is required'); return; }
+  if (name.length < 3)     { showError('h-name', 'Name must be at least 3 characters'); return; }
+
+  const r = await fetchJSON('/api/admin/hostels', 'POST', { name, type });
+  if (r) {
+    toast(r.message, 'success');
+    document.getElementById('h-name').value = '';
+    clearAllErrors(['h-name']);
+    loadHostelsTable();
+    loadHostelDropdown();
+    loadDashboard();
+  }
+}
+
+async function createRoom() {
+  clearAllErrors(['r-hostel', 'r-number', 'r-capacity']);
+  const hostelId = document.getElementById('r-hostel').value;
+  const number   = document.getElementById('r-number').value.trim();
+  const type     = document.getElementById('r-type').value;
+  const capacity = document.getElementById('r-capacity').value;
+
+  let valid = true;
+  if (!hostelId)  { showError('r-hostel',   'Please select a hostel'); valid = false; }
+  if (!number)    { showError('r-number',   'Room number is required'); valid = false; }
+  if (!capacity)  { showError('r-capacity', 'Capacity is required'); valid = false; }
+  else if (Number(capacity) < 1 || Number(capacity) > 10) {
+    showError('r-capacity', 'Capacity must be between 1 and 10'); valid = false;
+  }
+  if (!valid) return;
+
+  const r = await fetchJSON('/api/admin/rooms', 'POST', {
+    hostel_id: hostelId, room_number: number, type, capacity
+  });
+  if (r) {
+    toast(r.message, 'success');
+    document.getElementById('r-number').value   = '';
+    document.getElementById('r-capacity').value = '';
+    clearAllErrors(['r-hostel', 'r-number', 'r-capacity']);
+    loadRoomsTable();
+    loadDashboard();
+  }
+}
+
+// ── CREATE USER (with validation) ─────────────
+async function createUser() {
+  const ids = ['cu-name','cu-email','cu-pass'];
+  clearAllErrors(ids);
+
+  const name  = document.getElementById('cu-name').value.trim();
+  const email = document.getElementById('cu-email').value.trim();
+  const pass  = document.getElementById('cu-pass').value;
+  const role  = document.getElementById('cu-role').value;
+
+  let valid = true;
+
+  if (!name) {
+    showError('cu-name', 'Full name is required'); valid = false;
+  } else if (name.length < 2) {
+    showError('cu-name', 'Name must be at least 2 characters'); valid = false;
+  }
+
+  if (!email) {
+    showError('cu-email', 'Email is required'); valid = false;
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showError('cu-email', 'Enter a valid email (e.g. user@hostel.com)'); valid = false;
+  }
+
+  if (!pass) {
+    showError('cu-pass', 'Password is required'); valid = false;
+  } else if (pass.length < 6) {
+    showError('cu-pass', 'Password must be at least 6 characters'); valid = false;
+  }
+
+  if (!valid) return;
+
+  const r = await fetchJSON('/api/admin/users', 'POST', {name, email, password:pass, role});
+  if (r) {
+    toast(r.message, 'success');
+    clearAllErrors(ids);
+    document.getElementById('cu-name').value  = '';
+    document.getElementById('cu-email').value = '';
+    document.getElementById('cu-pass').value  = '';
+  }
+}
+
+// ── CHANGE PASSWORD ───────────────────────────
+document.addEventListener('input', function(e) {
+  if (e.target.id !== 'cp-new') return;
+  const val  = e.target.value;
+  const bar  = document.getElementById('strengthBar');
+  const text = document.getElementById('strengthText');
+  let strength = 0;
+  if (val.length >= 6)           strength++;
+  if (val.length >= 10)          strength++;
+  if (/[A-Z]/.test(val))         strength++;
+  if (/[0-9]/.test(val))         strength++;
+  if (/[^A-Za-z0-9]/.test(val))  strength++;
+  const levels = [
+    { w:'0%',   c:'transparent',  t:'' },
+    { w:'25%',  c:'var(--coral)', t:'Weak' },
+    { w:'50%',  c:'var(--gold)',  t:'Fair' },
+    { w:'75%',  c:'#4dd68c',     t:'Good' },
+    { w:'100%', c:'var(--teal)', t:'Strong ✅' },
+  ];
+  bar.style.width      = levels[strength].w;
+  bar.style.background = levels[strength].c;
+  text.textContent     = levels[strength].t;
+  text.style.color     = levels[strength].c;
+});
+
+async function changePassword() {
+  const old_password = document.getElementById('cp-old').value;
+  const new_password = document.getElementById('cp-new').value;
+  const confirm      = document.getElementById('cp-confirm').value;
+  const msg          = document.getElementById('cp-msg');
+  if (!old_password || !new_password || !confirm) {
+    msg.style.color = 'var(--coral)'; msg.textContent = '⚠️ Please fill all fields.'; return;
+  }
+  if (new_password !== confirm) {
+    msg.style.color = 'var(--coral)'; msg.textContent = '⚠️ Passwords do not match.'; return;
+  }
+  if (new_password.length < 6) {
+    msg.style.color = 'var(--coral)'; msg.textContent = '⚠️ Min 6 characters required.'; return;
+  }
+  const r = await fetchJSON('/api/auth/change-password', 'POST', { old_password, new_password });
+  if (r) {
+    msg.style.color = 'var(--teal)';
+    msg.textContent = '✅ ' + r.message;
+    document.getElementById('cp-old').value     = '';
+    document.getElementById('cp-new').value     = '';
+    document.getElementById('cp-confirm').value = '';
+    setTimeout(async () => {
+      await fetch('/api/auth/logout', { method:'POST', credentials:'include' });
+      window.location.href = 'login.html';
+    }, 2000);
+  }
+}
+
+// ── HELPERS ───────────────────────────────────
+async function fetchJSON(url, method='GET', body=null) {
+  try {
+    const opts = { method, credentials:'include', headers:{'Content-Type':'application/json'} };
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(API+url, opts);
+    const d = await r.json();
+    if (!r.ok) { toast(d.message,'error'); return null; }
+    return d;
+  } catch { toast('Server error','error'); return null; }
+}
+
+function badge(status) {
+  const map = {pending:'b-pending',approved:'b-approved',rejected:'b-rejected',paid:'b-paid','in-progress':'b-inprogress',resolved:'b-resolved'};
+  return `<span class="badge ${map[status]||''}">${status}</span>`;
+}
+
+function fmtDate(d) { return d ? new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—'; }
+
+function toast(msg, type='info') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast t-${type}`;
+  t.innerHTML = `<span>${type==='success'?'✅':type==='error'?'❌':'ℹ️'}</span> ${msg}`;
+  c.appendChild(t);
+  setTimeout(()=>t.remove(), 3500);
+}
+
+init();
+</script>
+<div class="modal-overlay" id="sessionModal"><div class="modal" style="text-align:center"><div style="font-size:2.5rem;margin-bottom:12px">⏰</div><h3 style="margin-bottom:8px">Session Expiring Soon</h3><p style="font-size:.87rem;color:var(--muted);margin-bottom:18px">You have been inactive. You will be logged out in<br><strong id="sessionCountdown" style="font-size:1.4rem;color:var(--coral)">60</strong> seconds.</p><div style="display:flex;gap:10px"><button class="btn btn-primary" style="flex:1" onclick="keepSessionAlive()">✅ Stay Logged In</button><button class="btn btn-secondary" style="flex:1" onclick="sessionLogout()">🚪 Logout Now</button></div></div></div><script>
+const INACTIVITY_LIMIT = 30 * 60 * 1000;
+const WARNING_BEFORE   =  1 * 60 * 1000;
+let inactivityTimer, countdownTimer, countdownVal;
+function resetInactivityTimer() {
+  clearTimeout(inactivityTimer);
+  inactivityTimer = setTimeout(showSessionWarning, INACTIVITY_LIMIT - WARNING_BEFORE);
+}
+function showSessionWarning() {
+  countdownVal = 60;
+  document.getElementById("sessionCountdown").textContent = countdownVal;
+  document.getElementById("sessionModal").classList.add("show");
+  countdownTimer = setInterval(() => {
+    countdownVal--;
+    document.getElementById("sessionCountdown").textContent = countdownVal;
+    if (countdownVal <= 0) { clearInterval(countdownTimer); sessionLogout(); }
+  }, 1000);
+}
+function keepSessionAlive() {
+  clearInterval(countdownTimer);
+  document.getElementById("sessionModal").classList.remove("show");
+  fetch("/api/auth/me", { credentials: "include" });
+  resetInactivityTimer();
+}
+async function sessionLogout() {
+  clearInterval(countdownTimer);
+  document.getElementById("sessionModal").classList.remove("show");
+  await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+  window.location.href = "login.html";
+}
+["mousemove","mousedown","keydown","touchstart","scroll","click"].forEach(e =>
+  document.addEventListener(e, resetInactivityTimer, { passive: true })
+);
+resetInactivityTimer();
+
+// ── MOBILE SIDEBAR ────────────────────────────
+function toggleSidebar() {
+  const sb  = document.querySelector('.sidebar');
+  const btn = document.getElementById('hamburger');
+  const ov  = document.getElementById('sidebarOverlay');
+  const open = sb.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  ov.classList.toggle('show', open);
+  document.body.style.overflow = open ? 'hidden' : '';
+}
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('hamburger').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+document.querySelectorAll('.sidebar a').forEach(a =>
+  a.addEventListener('click', () => { if(window.innerWidth < 900) closeSidebar(); })
+);
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeSidebar(); });
+</script>
+</body>
+</html>

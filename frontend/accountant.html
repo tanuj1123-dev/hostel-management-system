@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Accountant Dashboard — HostelHub</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div class="layout">
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">🏠</div>
+    <div class="brand-text"><div class="b-name">Hostel<span>Hub</span></div><div class="b-role">Accountant Panel</div></div>
+  </div>
+  <span class="nav-label">Finance</span>
+  <a href="#" class="active" onclick="showSection('dashboard',this)"><span class="icon">📊</span> Dashboard</a>
+  <a href="#" onclick="showSection('fees',this)"><span class="icon">💰</span> Fee Records</a>
+  <a href="#" onclick="showSection('overdue',this)"><span class="icon">🔴</span> Overdue</a>
+  <a href="#" onclick="showSection('assign',this)"><span class="icon">➕</span> Assign Fee</a>
+  <a href="#" onclick="showSection('bulk',this)"><span class="icon">⚡</span> Bulk Assign</a>
+  <span class="nav-label">Account</span>
+  <a href="#" onclick="showSection('change-password',this)"><span class="icon">🔑</span> Change Password</a>
+  <div class="sidebar-footer">
+    <div class="user-chip">
+      <div class="avatar" id="sideAvatar">A</div>
+      <div class="user-info"><div class="u-name" id="sideName">Accountant</div><div class="u-role">Accountant</div></div>
+      <button class="logout-btn" onclick="logout()">⏻</button>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+
+  <!-- DASHBOARD -->
+  <section id="sec-dashboard">
+    <div class="topbar"><div><h1>Finance Dashboard</h1><p id="greetMsg">Fee overview</p></div></div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="s-icon s-teal">💰</div><div class="s-val" id="s-revenue">—</div><div class="s-label">Total Revenue</div></div>
+      <div class="stat-card"><div class="s-icon s-coral">⏳</div><div class="s-val" id="s-pending-amt">—</div><div class="s-label">Pending Amount</div></div>
+      <div class="stat-card"><div class="s-icon s-green">✅</div><div class="s-val" id="s-paid">—</div><div class="s-label">Paid Records</div></div>
+      <div class="stat-card"><div class="s-icon s-gold">📋</div><div class="s-val" id="s-pending-ct">—</div><div class="s-label">Pending Records</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>Recent Fee Records</h3><button class="btn btn-sm btn-secondary" onclick="showSection('fees',null)">View All</button></div>
+      <div id="dashFeesWrap"></div>
+    </div>
+  </section>
+
+  <!-- FEE RECORDS -->
+  <section id="sec-fees" style="display:none">
+    <div class="topbar"><div><h1>Fee Records</h1><p>All student fee assignments</p></div></div>
+    <div class="panel">
+      <div class="panel-head"><h3>All Fees</h3></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Student</th><th>Roll No</th><th>Hostel</th><th>Description</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Paid On</th></tr></thead>
+        <tbody id="feesTbody"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ASSIGN FEE -->
+  <section id="sec-assign" style="display:none">
+    <div class="topbar"><div><h1>Assign Fee</h1><p>Assign hostel fees to students</p></div></div>
+    <div class="panel" style="max-width:520px">
+      <div class="panel-head"><h3>New Fee Assignment</h3></div>
+      <div class="form-group"><label>Select Student</label>
+        <select id="f-student"><option value="">-- Select Student --</option></select>
+      </div>
+      <div class="form-group"><label>Description</label><input type="text" id="f-desc" value="Hostel Fee" placeholder="e.g. Hostel Fee - Semester 1"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Amount (₹)</label><input type="number" id="f-amount" placeholder="e.g. 15000" min="0"></div>
+        <div class="form-group"><label>Due Date</label><input type="date" id="f-due"></div>
+      </div>
+      <button class="btn btn-primary" onclick="assignFee()">Assign Fee</button>
+    </div>
+  </section>
+
+  <!-- OVERDUE FEES -->
+  <section id="sec-overdue" style="display:none">
+    <div class="topbar">
+      <div><h1>🔴 Overdue Fees</h1><p>Students who missed their payment due date</p></div>
+    </div>
+
+    <!-- STATS STRIP -->
+    <div class="stats-grid" style="margin-bottom:20px">
+      <div class="stat-card"><div class="s-icon s-coral">👤</div><div class="s-val" id="od-students">—</div><div class="s-label">Overdue Students</div></div>
+      <div class="stat-card"><div class="s-icon s-coral">💰</div><div class="s-val" id="od-amount">—</div><div class="s-label">Total Overdue Amount</div></div>
+      <div class="stat-card"><div class="s-icon s-gold">📋</div><div class="s-val" id="od-records">—</div><div class="s-label">Overdue Records</div></div>
+      <div class="stat-card"><div class="s-icon s-gold">📅</div><div class="s-val" id="od-maxdays">—</div><div class="s-label">Max Days Overdue</div></div>
+    </div>
+
+    <!-- LATE FINE PANEL -->
+    <div class="panel" style="max-width:560px;margin-bottom:24px;border:1px solid var(--coral)">
+      <div class="panel-head"><h3>⚡ Add Late Fine to All Defaulters</h3></div>
+      <p style="font-size:.83rem;color:var(--muted);margin-bottom:16px">This will assign a new late fine fee to every student with at least one overdue unpaid record.</p>
+      <div class="form-row">
+        <div class="form-group"><label>Fine Amount (₹)</label><input type="number" id="lf-amount" placeholder="e.g. 500" min="1"></div>
+        <div class="form-group"><label>Due Date for Fine</label><input type="date" id="lf-due"></div>
+      </div>
+      <div class="form-group"><label>Description</label><input type="text" id="lf-desc" value="Late Payment Fine" placeholder="e.g. Late Payment Fine - Nov 2025"></div>
+      <button class="btn btn-danger" onclick="addLateFine()" style="background:var(--coral);border-color:var(--coral)">🚨 Add Late Fine to All Defaulters</button>
+    </div>
+
+    <!-- OVERDUE TABLE -->
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Defaulter List</h3>
+        <button class="btn btn-sm btn-secondary" onclick="loadOverdue()">🔄 Refresh</button>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Student</th><th>Roll No</th><th>Hostel / Room</th><th>Description</th><th>Amount</th><th>Due Date</th><th>Days Overdue</th></tr></thead>
+        <tbody id="overdueTbody"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- BULK ASSIGN FEE -->
+  <section id="sec-bulk" style="display:none">
+    <div class="topbar"><div><h1>⚡ Bulk Assign Fee</h1><p>Assign the same fee to all students of a room type in one click</p></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start">
+
+      <!-- LEFT: Form -->
+      <div class="panel">
+        <div class="panel-head"><h3>Fee Details</h3></div>
+
+        <div class="form-group">
+          <label>Room Type</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px">
+            <label id="bt-single" onclick="selectBulkType('single')" style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:10px;border:2px solid var(--border);cursor:pointer;transition:all .2s">
+              <span style="font-size:1.4rem">🛏</span>
+              <div><div style="font-weight:600;font-size:.88rem">Single</div><div id="bt-single-count" style="font-size:.72rem;color:var(--muted)">— students</div></div>
+            </label>
+            <label id="bt-double" onclick="selectBulkType('double')" style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:10px;border:2px solid var(--border);cursor:pointer;transition:all .2s">
+              <span style="font-size:1.4rem">🛏🛏</span>
+              <div><div style="font-weight:600;font-size:.88rem">Double</div><div id="bt-double-count" style="font-size:.72rem;color:var(--muted)">— students</div></div>
+            </label>
+            <label id="bt-triple" onclick="selectBulkType('triple')" style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:10px;border:2px solid var(--border);cursor:pointer;transition:all .2s">
+              <span style="font-size:1.4rem">🛏🛏🛏</span>
+              <div><div style="font-weight:600;font-size:.88rem">Triple</div><div id="bt-triple-count" style="font-size:.72rem;color:var(--muted)">— students</div></div>
+            </label>
+            <label id="bt-quad" onclick="selectBulkType('quad')" style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:10px;border:2px solid var(--border);cursor:pointer;transition:all .2s">
+              <span style="font-size:1.4rem">🛏×4</span>
+              <div><div style="font-weight:600;font-size:.88rem">Quad</div><div id="bt-quad-count" style="font-size:.72rem;color:var(--muted)">— students</div></div>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:4px"><label>Description</label><input type="text" id="b-desc" placeholder="e.g. Hostel Fee - Semester 1" value="Hostel Fee"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Amount (₹)</label><input type="number" id="b-amount" placeholder="e.g. 15000" min="0"></div>
+          <div class="form-group"><label>Due Date</label><input type="date" id="b-due"></div>
+        </div>
+
+        <button class="btn btn-primary" id="bulkSubmitBtn" onclick="assignBulkFee()" disabled
+          style="width:100%;opacity:.5;cursor:not-allowed">
+          ⚡ Assign to All Selected Students
+        </button>
+      </div>
+
+      <!-- RIGHT: Preview -->
+      <div class="panel">
+        <div class="panel-head"><h3>Preview</h3><span id="bulk-preview-count" style="font-size:.78rem;color:var(--muted)">Select a room type</span></div>
+        <div id="bulk-preview-list">
+          <div class="empty"><div class="e-icon">👆</div><h4>Pick a room type on the left</h4><p style="font-size:.82rem;color:var(--muted)">Students will appear here for review before assigning</p></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- CHANGE PASSWORD -->
+  <section id="sec-change-password" style="display:none">
+    <div class="topbar">
+      <div><h1>Change Password</h1><p>Update your login password</p></div>
+    </div>
+    <div class="panel" style="max-width:460px">
+      <div class="panel-head"><h3>Update Password</h3></div>
+      <div class="form-group"><label>Current Password</label><input type="password" id="cp-old" placeholder="Enter current password"></div>
+      <div class="form-group"><label>New Password</label><input type="password" id="cp-new" placeholder="Min 6 characters"></div>
+      <div class="form-group"><label>Confirm New Password</label><input type="password" id="cp-confirm" placeholder="Re-enter new password"></div>
+      <div style="margin-bottom:18px">
+        <div style="font-size:.7rem;color:var(--muted);margin-bottom:6px">Password Strength</div>
+        <div style="height:6px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden">
+          <div id="strengthBar" style="height:100%;width:0%;border-radius:99px;transition:all .3s"></div>
+        </div>
+        <div id="strengthText" style="font-size:.72rem;margin-top:4px;color:var(--muted)"></div>
+      </div>
+      <button class="btn btn-primary" onclick="changePassword()">🔑 Update Password</button>
+      <div id="cp-msg" style="margin-top:14px;font-size:.83rem"></div>
+    </div>
+  </section>
+
+</main>
+</div>
+<div id="toast-container"></div>
+
+<!-- BULK CONFIRM MODAL -->
+<div class="modal-overlay" id="bulkConfirmModal">
+  <div class="modal">
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:2rem;margin-bottom:8px">⚡</div>
+      <h3 style="margin-bottom:6px">Confirm Bulk Assignment</h3>
+      <p id="bulkConfirmMsg" style="font-size:.87rem;color:var(--muted);line-height:1.6"></p>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="btn btn-primary" style="flex:1" onclick="executeBulkAssign()">✅ Yes, Assign</button>
+      <button class="btn btn-secondary" style="flex:1" onclick="document.getElementById('bulkConfirmModal').classList.remove('show')">Cancel</button>
+    </div>
+  </div>
+</div>
+<script>
+const API = '';
+
+// ── VALIDATION HELPERS ────────────────────────
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.border = '1.5px solid var(--coral)';
+  let err = el.parentNode.querySelector('.v-err');
+  if (!err) {
+    err = document.createElement('div');
+    err.className = 'v-err';
+    err.style.cssText = 'color:var(--coral);font-size:.72rem;margin-top:4px';
+    el.parentNode.appendChild(err);
+  }
+  err.textContent = '⚠️ ' + msg;
+}
+function clearError(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.border = '';
+  const err = el.parentNode.querySelector('.v-err');
+  if (err) err.remove();
+}
+function clearAllErrors(ids) { ids.forEach(clearError); }
+
+// ── AUTH CHECK ────────────────────────────────
+async function init() {
+  const r = await fetch(`${API}/api/auth/me`,{credentials:'include'});
+  if(!r.ok) return window.location.href='login.html';
+  const u = await r.json();
+  if(u.role!=='accountant') return window.location.href='login.html';
+  document.getElementById('sideName').textContent   = u.name;
+  document.getElementById('sideAvatar').textContent = u.name[0].toUpperCase();
+  document.getElementById('greetMsg').textContent   = `Welcome, ${u.name}`;
+  loadDashboard();
+  loadStudentDropdown();
+}
+
+async function logout() {
+  await fetch(`${API}/api/auth/logout`,{method:'POST',credentials:'include'});
+  window.location.href='login.html';
+}
+
+function showSection(name, el) {
+  document.querySelectorAll('.main > section').forEach(s=>s.style.display='none');
+  document.getElementById('sec-'+name).style.display='';
+  document.querySelectorAll('.sidebar a').forEach(a=>a.classList.remove('active'));
+  if(el) el.classList.add('active');
+  if(name==='fees')    loadFees();
+  if(name==='overdue') loadOverdue();
+  if(name==='assign')  clearAllErrors(['f-student','f-desc','f-amount','f-due']);
+  if(name==='bulk')    initBulkSection();
+}
+
+// ── DASHBOARD ─────────────────────────────────
+async function loadDashboard() {
+  const d = await fetchJSON('/api/accountant/dashboard');
+  if(!d) return;
+  document.getElementById('s-revenue').textContent     = '₹'+Number(d.revenue).toLocaleString('en-IN');
+  document.getElementById('s-pending-amt').textContent = '₹'+Number(d.pending_amount).toLocaleString('en-IN');
+  document.getElementById('s-paid').textContent        = d.total_paid;
+  document.getElementById('s-pending-ct').textContent  = d.total_pending;
+  loadDashFees();
+}
+
+async function loadDashFees() {
+  const fees = await fetchJSON('/api/accountant/fees');
+  const recent = fees?.slice(0,5)||[];
+  document.getElementById('dashFeesWrap').innerHTML = recent.length
+    ? `<div class="tbl-wrap"><table>
+        <thead><tr><th>Student</th><th>Amount</th><th>Due</th><th>Status</th></tr></thead>
+        <tbody>${recent.map(f=>`<tr>
+          <td>${f.student_name}</td>
+          <td><strong style="color:var(--teal);font-family:var(--mono)">₹${Number(f.amount).toLocaleString('en-IN')}</strong></td>
+          <td>${fmtDate(f.due_date)}</td>
+          <td>${badge(f.status)}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>`
+    : `<div class="empty"><div class="e-icon">💰</div><h4>No fees assigned yet</h4></div>`;
+}
+
+async function loadFees() {
+  const fees = await fetchJSON('/api/accountant/fees');
+  const today = new Date(new Date().toDateString());
+  document.getElementById('feesTbody').innerHTML = fees?.length
+    ? fees.map(f => {
+        const isOverdue = f.status === 'pending' && new Date(f.due_date) < today;
+        const statusBadge = isOverdue
+          ? `<span class="badge b-rejected">overdue</span>`
+          : badge(f.status);
+        const daysOver = isOverdue
+          ? Math.ceil((today - new Date(f.due_date)) / (1000*60*60*24))
+          : 0;
+        return `<tr style="${isOverdue ? 'background:rgba(255,99,99,.04)' : ''}">
+          <td><strong>${f.student_name}</strong><br><small style="color:var(--muted)">${f.email}</small></td>
+          <td>${f.roll_no ? `<span class="chip">${f.roll_no}</span>` : '—'}</td>
+          <td>${f.hostel_name || '—'}</td>
+          <td>${f.description}</td>
+          <td><strong style="color:${isOverdue ? 'var(--coral)' : 'var(--teal)'};font-family:var(--mono)">₹${Number(f.amount).toLocaleString('en-IN')}</strong></td>
+          <td style="color:${isOverdue ? 'var(--coral)' : 'inherit'}">${fmtDate(f.due_date)}</td>
+          <td>${statusBadge}${isOverdue ? `<div style="font-size:.68rem;color:var(--coral);margin-top:3px">${daysOver}d overdue</div>` : ''}</td>
+          <td>${f.paid_at ? fmtDate(f.paid_at) : '—'}</td>
+        </tr>`;
+      }).join('')
+    : `<tr><td colspan="8"><div class="empty"><div class="e-icon">💰</div><h4>No records</h4></div></td></tr>`;
+}
+
+// ── OVERDUE ───────────────────────────────────
+async function loadOverdue() {
+  const data = await fetchJSON('/api/accountant/overdue');
+  if (!data) return;
+
+  // Stats
+  const uniqueStudents = [...new Set(data.map(f => f.student_id))].length;
+  const totalAmt       = data.reduce((s, f) => s + Number(f.amount), 0);
+  const maxDays        = data.length ? Math.max(...data.map(f => f.days_overdue)) : 0;
+  document.getElementById('od-students').textContent = uniqueStudents;
+  document.getElementById('od-amount').textContent   = '₹' + totalAmt.toLocaleString('en-IN');
+  document.getElementById('od-records').textContent  = data.length;
+  document.getElementById('od-maxdays').textContent  = maxDays + 'd';
+
+  // Table
+  document.getElementById('overdueTbody').innerHTML = data.length
+    ? data.map(f => {
+        const urgency = f.days_overdue > 30 ? 'var(--coral)' : f.days_overdue > 7 ? 'var(--gold)' : 'inherit';
+        return `<tr>
+          <td><strong>${f.student_name}</strong><br><small style="color:var(--muted)">${f.email}</small></td>
+          <td>${f.roll_no ? `<span class="chip">${f.roll_no}</span>` : '—'}</td>
+          <td>${f.hostel_name || '—'} · ${f.room_number || '—'}<br><small style="color:var(--muted);text-transform:capitalize">${f.room_type || ''}</small></td>
+          <td>${f.description}</td>
+          <td><strong style="color:var(--coral);font-family:var(--mono)">₹${Number(f.amount).toLocaleString('en-IN')}</strong></td>
+          <td style="color:var(--coral)">${fmtDate(f.due_date)}</td>
+          <td>
+            <span style="color:${urgency};font-weight:700;font-size:.9rem">${f.days_overdue}d</span>
+            <div style="font-size:.68rem;color:var(--muted)">${f.days_overdue > 30 ? '🔴 Critical' : f.days_overdue > 7 ? '🟡 Warning' : '🟠 New'}</div>
+          </td>
+        </tr>`;
+      }).join('')
+    : `<tr><td colspan="7"><div class="empty"><div class="e-icon">🎉</div><h4>No overdue fees!</h4><p style="color:var(--muted);font-size:.84rem">All students are up to date.</p></div></td></tr>`;
+}
+
+let lateFineConfirmPayload = null;
+
+async function addLateFine() {
+  const amount = document.getElementById('lf-amount').value;
+  const due    = document.getElementById('lf-due').value;
+  const desc   = document.getElementById('lf-desc').value.trim();
+
+  if (!amount || Number(amount) <= 0) { toast('Enter a valid fine amount', 'error'); return; }
+  if (!due) { toast('Due date is required', 'error'); return; }
+  if (new Date(due) < new Date(new Date().toDateString())) { toast('Due date cannot be in the past', 'error'); return; }
+
+  lateFineConfirmPayload = { amount, due_date: due, description: desc || 'Late Payment Fine' };
+
+  const odCount = document.getElementById('od-students').textContent;
+  document.getElementById('bulkConfirmMsg').innerHTML =
+    `Add late fine of <strong style="color:var(--coral)">₹${Number(amount).toLocaleString('en-IN')}</strong> to
+     <strong>${odCount} overdue student${odCount !== '1' ? 's' : ''}</strong>?<br>
+     <span style="font-size:.8rem;color:var(--muted)">"${desc}"</span>`;
+
+  // Reuse bulk confirm modal, point OK to executeLateFine
+  document.getElementById('bulkConfirmModal').querySelector('button').setAttribute('onclick', 'executeLateFine()');
+  document.getElementById('bulkConfirmModal').classList.add('show');
+}
+
+async function executeLateFine() {
+  document.getElementById('bulkConfirmModal').classList.remove('show');
+  // Reset confirm button back to bulk assign
+  document.getElementById('bulkConfirmModal').querySelector('button').setAttribute('onclick', 'executeBulkAssign()');
+  if (!lateFineConfirmPayload) return;
+
+  const r = await fetchJSON('/api/accountant/fees/late-fine', 'POST', lateFineConfirmPayload);
+  lateFineConfirmPayload = null;
+  if (r) {
+    toast(r.message, 'success');
+    document.getElementById('lf-amount').value = '';
+    document.getElementById('lf-due').value    = '';
+    loadOverdue();
+    loadDashboard();
+  }
+}
+
+async function loadStudentDropdown() {
+  const students = await fetchJSON('/api/accountant/students');
+  const sel = document.getElementById('f-student');
+  const typeLabel = { single:'Single', double:'Double', triple:'Triple', quad:'Quad' };
+  const typeIcon  = { single:'🛏', double:'🛏🛏', triple:'🛏🛏🛏', quad:'🛏×4' };
+  if(students?.length) {
+    sel.innerHTML = '<option value="">-- Select Student --</option>' +
+      students.map(s => {
+        const id      = s.roll_no || s.email;
+        const hostel  = s.hostel_name ? ` · ${s.hostel_name}` : '';
+        const room    = s.room_number ? ` · Room ${s.room_number}` : '';
+        const rtype   = s.room_type   ? ` · ${typeIcon[s.room_type]} ${typeLabel[s.room_type]}` : '';
+        return `<option value="${s.id}">${s.name} (${id})${hostel}${room}${rtype}</option>`;
+      }).join('');
+  }
+}
+
+// ── ASSIGN FEE (with validation) ──────────────
+async function assignFee() {
+  const ids = ['f-student','f-desc','f-amount','f-due'];
+  clearAllErrors(ids);
+
+  const studentId = document.getElementById('f-student').value;
+  const desc      = document.getElementById('f-desc').value.trim();
+  const amount    = document.getElementById('f-amount').value;
+  const dueDate   = document.getElementById('f-due').value;
+
+  let valid = true;
+
+  if (!studentId) { showError('f-student', 'Please select a student'); valid = false; }
+
+  if (!desc) { showError('f-desc', 'Description is required'); valid = false; }
+
+  if (!amount) {
+    showError('f-amount', 'Amount is required'); valid = false;
+  } else if (Number(amount) <= 0) {
+    showError('f-amount', 'Amount must be greater than 0'); valid = false;
+  } else if (Number(amount) > 500000) {
+    showError('f-amount', 'Amount seems too high — please verify'); valid = false;
+  }
+
+  if (!dueDate) {
+    showError('f-due', 'Due date is required'); valid = false;
+  } else if (new Date(dueDate) < new Date(new Date().toDateString())) {
+    showError('f-due', 'Due date cannot be in the past'); valid = false;
+  }
+
+  if (!valid) return;
+
+  const r = await fetchJSON('/api/accountant/fees', 'POST', {
+    student_id: studentId, description: desc, amount, due_date: dueDate
+  });
+  if (r) {
+    toast(r.message, 'success');
+    clearAllErrors(ids);
+    document.getElementById('f-amount').value = '';
+    document.getElementById('f-due').value    = '';
+    loadDashboard();
+  }
+}
+
+// ── BULK ASSIGN ───────────────────────────────
+let allStudentsData = [];
+let selectedBulkType = null;
+
+async function initBulkSection() {
+  const students = await fetchJSON('/api/accountant/students');
+  allStudentsData = students || [];
+
+  // Count per room type
+  const counts = { single:0, double:0, triple:0, quad:0 };
+  allStudentsData.forEach(s => { if (s.room_type && counts[s.room_type] !== undefined) counts[s.room_type]++; });
+
+  ['single','double','triple','quad'].forEach(t => {
+    const el = document.getElementById(`bt-${t}-count`);
+    if (el) el.textContent = `${counts[t]} student${counts[t] !== 1 ? 's' : ''}`;
+  });
+}
+
+function selectBulkType(type) {
+  selectedBulkType = type;
+
+  // Highlight selected card
+  ['single','double','triple','quad'].forEach(t => {
+    const card = document.getElementById(`bt-${t}`);
+    if (!card) return;
+    if (t === type) {
+      card.style.borderColor  = 'var(--teal)';
+      card.style.background   = 'rgba(0,194,187,.08)';
+    } else {
+      card.style.borderColor  = 'var(--border)';
+      card.style.background   = 'transparent';
+    }
+  });
+
+  // Filter students
+  const filtered = allStudentsData.filter(s => s.room_type === type);
+
+  // Update preview
+  const countEl = document.getElementById('bulk-preview-count');
+  countEl.textContent = `${filtered.length} student${filtered.length !== 1 ? 's' : ''} will be charged`;
+  countEl.style.color = filtered.length ? 'var(--teal)' : 'var(--coral)';
+
+  document.getElementById('bulk-preview-list').innerHTML = filtered.length
+    ? `<div style="max-height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:8px">
+        ${filtered.map((s,i) => `
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--glass-2);border-radius:8px;border:1px solid var(--border-s)">
+            <div style="width:32px;height:32px;border-radius:50%;background:var(--teal);color:#1a1a2e;font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${s.name[0].toUpperCase()}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600;font-size:.87rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name}</div>
+              <div style="font-size:.72rem;color:var(--muted)">${s.roll_no || s.email} · ${s.hostel_name || '—'} · Room ${s.room_number || '—'}</div>
+            </div>
+            <span style="font-size:.7rem;background:rgba(0,194,187,.12);color:var(--teal);padding:2px 8px;border-radius:20px;text-transform:capitalize;white-space:nowrap">${s.room_type}</span>
+          </div>`).join('')}
+      </div>`
+    : `<div class="empty"><div class="e-icon">😶</div><h4>No students in ${type} rooms</h4></div>`;
+
+  // Enable/disable button
+  const btn = document.getElementById('bulkSubmitBtn');
+  btn.disabled = filtered.length === 0;
+  btn.style.opacity = filtered.length ? '1' : '.5';
+  btn.style.cursor  = filtered.length ? 'pointer' : 'not-allowed';
+}
+
+let bulkPayload = null;
+
+async function assignBulkFee() {
+  if (!selectedBulkType) return;
+
+  const desc      = document.getElementById('b-desc').value.trim();
+  const amount    = document.getElementById('b-amount').value;
+  const due       = document.getElementById('b-due').value;
+  const typeLabel = selectedBulkType.charAt(0).toUpperCase() + selectedBulkType.slice(1);
+
+  let valid = true;
+  if (!amount || Number(amount) <= 0) { toast('Enter a valid amount', 'error'); valid = false; }
+  if (!due) { toast('Due date is required', 'error'); valid = false; }
+  else if (new Date(due) < new Date(new Date().toDateString())) { toast('Due date cannot be in the past', 'error'); valid = false; }
+  if (!valid) return;
+
+  const count = allStudentsData.filter(s => s.room_type === selectedBulkType).length;
+  bulkPayload = { room_type: selectedBulkType, amount, description: desc || `Hostel Fee (${typeLabel})`, due_date: due };
+
+  document.getElementById('bulkConfirmMsg').innerHTML =
+    `Assign <strong style="color:var(--teal)">₹${Number(amount).toLocaleString('en-IN')}</strong> to
+     <strong>${count} student${count !== 1 ? 's' : ''}</strong> in
+     <strong>${typeLabel}</strong> rooms?<br>
+     <span style="font-size:.8rem">This will create ${count} fee record${count !== 1 ? 's' : ''}.</span>`;
+
+  document.getElementById('bulkConfirmModal').classList.add('show');
+}
+
+async function executeBulkAssign() {
+  document.getElementById('bulkConfirmModal').classList.remove('show');
+  if (!bulkPayload) return;
+
+  const btn = document.getElementById('bulkSubmitBtn');
+  btn.textContent = '⏳ Assigning...';
+  btn.disabled = true;
+
+  const r = await fetchJSON('/api/accountant/fees/bulk', 'POST', bulkPayload);
+
+  btn.textContent = '⚡ Assign to All Selected Students';
+  btn.disabled = false;
+  bulkPayload = null;
+
+  if (r) {
+    toast(r.message, 'success');
+    document.getElementById('b-amount').value = '';
+    document.getElementById('b-due').value    = '';
+    loadDashboard();
+  }
+}
+
+// ── CHANGE PASSWORD ───────────────────────────
+document.addEventListener('input', function(e) {
+  if(e.target.id !== 'cp-new') return;
+  const val = e.target.value;
+  const bar = document.getElementById('strengthBar');
+  const text = document.getElementById('strengthText');
+  let strength = 0;
+  if(val.length >= 6)           strength++;
+  if(val.length >= 10)          strength++;
+  if(/[A-Z]/.test(val))         strength++;
+  if(/[0-9]/.test(val))         strength++;
+  if(/[^A-Za-z0-9]/.test(val))  strength++;
+  const levels = [
+    { w:'0%',c:'transparent',t:'' },{ w:'25%',c:'var(--coral)',t:'Weak' },
+    { w:'50%',c:'var(--gold)',t:'Fair' },{ w:'75%',c:'#4dd68c',t:'Good' },
+    { w:'100%',c:'var(--teal)',t:'Strong ✅' },
+  ];
+  bar.style.width=levels[strength].w; bar.style.background=levels[strength].c;
+  text.textContent=levels[strength].t; text.style.color=levels[strength].c;
+});
+
+async function changePassword() {
+  const old_password=document.getElementById('cp-old').value;
+  const new_password=document.getElementById('cp-new').value;
+  const confirm=document.getElementById('cp-confirm').value;
+  const msg=document.getElementById('cp-msg');
+  if(!old_password||!new_password||!confirm){msg.style.color='var(--coral)';msg.textContent='⚠️ Please fill all fields.';return;}
+  if(new_password!==confirm){msg.style.color='var(--coral)';msg.textContent='⚠️ Passwords do not match.';return;}
+  if(new_password.length<6){msg.style.color='var(--coral)';msg.textContent='⚠️ Min 6 characters required.';return;}
+  const r=await fetchJSON('/api/auth/change-password','POST',{old_password,new_password});
+  if(r){
+    msg.style.color='var(--teal)'; msg.textContent='✅ '+r.message;
+    document.getElementById('cp-old').value=''; document.getElementById('cp-new').value=''; document.getElementById('cp-confirm').value='';
+    setTimeout(async()=>{await fetch('/api/auth/logout',{method:'POST',credentials:'include'});window.location.href='login.html';},2000);
+  }
+}
+
+// ── HELPERS ───────────────────────────────────
+async function fetchJSON(url,method='GET',body=null){try{const opts={method,credentials:'include',headers:{'Content-Type':'application/json'}};if(body)opts.body=JSON.stringify(body);const r=await fetch(API+url,opts);const d=await r.json();if(!r.ok){toast(d.message,'error');return null;}return d;}catch{toast('Server error','error');return null;}}
+function badge(s){const m={pending:'b-pending',paid:'b-paid'};return `<span class="badge ${m[s]||''}">${s}</span>`;}
+function fmtDate(d){return d?new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—';}
+function toast(msg,type='info'){const c=document.getElementById('toast-container');const t=document.createElement('div');t.className=`toast t-${type}`;t.innerHTML=`<span>${type==='success'?'✅':type==='error'?'❌':'ℹ️'}</span> ${msg}`;c.appendChild(t);setTimeout(()=>t.remove(),3500);}
+
+init();
+</script>
+<div class="modal-overlay" id="sessionModal"><div class="modal" style="text-align:center"><div style="font-size:2.5rem;margin-bottom:12px">⏰</div><h3 style="margin-bottom:8px">Session Expiring Soon</h3><p style="font-size:.87rem;color:var(--muted);margin-bottom:18px">You have been inactive. You will be logged out in<br><strong id="sessionCountdown" style="font-size:1.4rem;color:var(--coral)">60</strong> seconds.</p><div style="display:flex;gap:10px"><button class="btn btn-primary" style="flex:1" onclick="keepSessionAlive()">✅ Stay Logged In</button><button class="btn btn-secondary" style="flex:1" onclick="sessionLogout()">🚪 Logout Now</button></div></div></div><script>
+const INACTIVITY_LIMIT = 30 * 60 * 1000;
+const WARNING_BEFORE   =  1 * 60 * 1000;
+let inactivityTimer, countdownTimer, countdownVal;
+function resetInactivityTimer() {
+  clearTimeout(inactivityTimer);
+  inactivityTimer = setTimeout(showSessionWarning, INACTIVITY_LIMIT - WARNING_BEFORE);
+}
+function showSessionWarning() {
+  countdownVal = 60;
+  document.getElementById("sessionCountdown").textContent = countdownVal;
+  document.getElementById("sessionModal").classList.add("show");
+  countdownTimer = setInterval(() => {
+    countdownVal--;
+    document.getElementById("sessionCountdown").textContent = countdownVal;
+    if (countdownVal <= 0) { clearInterval(countdownTimer); sessionLogout(); }
+  }, 1000);
+}
+function keepSessionAlive() {
+  clearInterval(countdownTimer);
+  document.getElementById("sessionModal").classList.remove("show");
+  fetch("/api/auth/me", { credentials: "include" });
+  resetInactivityTimer();
+}
+async function sessionLogout() {
+  clearInterval(countdownTimer);
+  document.getElementById("sessionModal").classList.remove("show");
+  await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+  window.location.href = "login.html";
+}
+["mousemove","mousedown","keydown","touchstart","scroll","click"].forEach(e =>
+  document.addEventListener(e, resetInactivityTimer, { passive: true })
+);
+resetInactivityTimer();
+
+// ── MOBILE SIDEBAR ────────────────────────────
+function toggleSidebar() {
+  const sb  = document.querySelector('.sidebar');
+  const btn = document.getElementById('hamburger');
+  const ov  = document.getElementById('sidebarOverlay');
+  const open = sb.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  ov.classList.toggle('show', open);
+  document.body.style.overflow = open ? 'hidden' : '';
+}
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('hamburger').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+document.querySelectorAll('.sidebar a').forEach(a =>
+  a.addEventListener('click', () => { if(window.innerWidth < 900) closeSidebar(); })
+);
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeSidebar(); });
+</script>
+</body>
+</html>

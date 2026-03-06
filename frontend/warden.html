@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Warden Dashboard — HostelHub</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div class="layout">
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">🏠</div>
+    <div class="brand-text"><div class="b-name">Hostel<span>Hub</span></div><div class="b-role">Warden Panel</div></div>
+  </div>
+  <span class="nav-label">Main</span>
+  <a href="#" class="active" onclick="showSection('dashboard',this)"><span class="icon">📊</span> Dashboard</a>
+  <a href="#" onclick="showSection('leaves',this)"><span class="icon">📅</span> Leave Requests</a>
+  <a href="#" onclick="showSection('announcements',this)"><span class="icon">📢</span> Announcements</a>
+  <span class="nav-label">Account</span>
+  <a href="#" onclick="showSection('change-password',this)"><span class="icon">🔑</span> Change Password</a>
+  <div class="sidebar-footer">
+    <div class="user-chip">
+      <div class="avatar" id="sideAvatar">W</div>
+      <div class="user-info"><div class="u-name" id="sideName">Warden</div><div class="u-role">Warden</div></div>
+      <button class="logout-btn" onclick="logout()">⏻</button>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+
+  <!-- DASHBOARD -->
+  <section id="sec-dashboard">
+    <div class="topbar"><div><h1>Warden Dashboard</h1><p id="greetMsg">Overview of hostel activity</p></div></div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="s-icon s-teal">👥</div><div class="s-val" id="s-students">—</div><div class="s-label">Total Students</div></div>
+      <div class="stat-card"><div class="s-icon s-gold">📅</div><div class="s-val" id="s-pending">—</div><div class="s-label">Pending Leaves</div></div>
+      <div class="stat-card"><div class="s-icon s-green">✅</div><div class="s-val" id="s-today">—</div><div class="s-label">Approved Today</div></div>
+      <div class="stat-card"><div class="s-icon s-coral">📢</div><div class="s-val" id="s-ann">—</div><div class="s-label">Announcements</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>Pending Leave Requests</h3><button class="btn btn-sm btn-secondary" onclick="showSection('leaves',null)">View All</button></div>
+      <div id="dashLeaveWrap"></div>
+    </div>
+  </section>
+
+  <!-- LEAVE REQUESTS -->
+  <section id="sec-leaves" style="display:none">
+    <div class="topbar"><div><h1>Leave Requests</h1><p>Approve or reject student leave/outpass applications</p></div></div>
+    <div class="panel">
+      <div class="panel-head"><h3>All Leave Requests</h3></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Student</th><th>Roll No</th><th>From</th><th>To</th><th>Reason</th><th>Destination</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="leavesTbody"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ANNOUNCEMENTS -->
+  <section id="sec-announcements" style="display:none">
+    <div class="topbar">
+      <div><h1>Announcements</h1><p>Post notices visible to all students</p></div>
+      <button class="btn btn-primary" onclick="toggleAnnForm()">➕ New Announcement</button>
+    </div>
+    <div class="panel" id="annFormPanel" style="display:none;max-width:520px">
+      <div class="panel-head"><h3>Post Announcement</h3></div>
+      <div class="form-group"><label>Title</label><input type="text" id="ann-title" placeholder="Announcement title"></div>
+      <div class="form-group"><label>Content</label><textarea id="ann-content" rows="4" placeholder="Write the announcement..."></textarea></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" onclick="postAnnouncement()">Post</button>
+        <button class="btn btn-secondary" onclick="toggleAnnForm()">Cancel</button>
+      </div>
+    </div>
+    <div id="annListWrap"></div>
+  </section>
+
+  <!-- CHANGE PASSWORD -->
+  <section id="sec-change-password" style="display:none">
+    <div class="topbar">
+      <div><h1>Change Password</h1><p>Update your login password</p></div>
+    </div>
+    <div class="panel" style="max-width:460px">
+      <div class="panel-head"><h3>Update Password</h3></div>
+      <div class="form-group"><label>Current Password</label><input type="password" id="cp-old" placeholder="Enter current password"></div>
+      <div class="form-group"><label>New Password</label><input type="password" id="cp-new" placeholder="Min 6 characters"></div>
+      <div class="form-group"><label>Confirm New Password</label><input type="password" id="cp-confirm" placeholder="Re-enter new password"></div>
+      <div style="margin-bottom:18px">
+        <div style="font-size:.7rem;color:var(--muted);margin-bottom:6px">Password Strength</div>
+        <div style="height:6px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden">
+          <div id="strengthBar" style="height:100%;width:0%;border-radius:99px;transition:all .3s"></div>
+        </div>
+        <div id="strengthText" style="font-size:.72rem;margin-top:4px;color:var(--muted)"></div>
+      </div>
+      <button class="btn btn-primary" onclick="changePassword()">🔑 Update Password</button>
+      <div id="cp-msg" style="margin-top:14px;font-size:.83rem"></div>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<!-- REMARKS MODAL -->
+<div class="modal-overlay" id="remarksModal">
+  <div class="modal">
+    <h3 id="modalTitle">Action</h3>
+    <input type="hidden" id="modal-leave-id">
+    <input type="hidden" id="modal-action">
+    <div class="form-group"><label>Remarks (optional)</label><textarea id="modal-remarks" rows="3" placeholder="Any remarks for the student..."></textarea></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-primary" id="modalConfirmBtn" onclick="confirmAction()">Confirm</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script>
+const API = '';
+
+// ── VALIDATION HELPERS ────────────────────────
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.border = '1.5px solid var(--coral)';
+  let err = el.parentNode.querySelector('.v-err');
+  if (!err) {
+    err = document.createElement('div');
+    err.className = 'v-err';
+    err.style.cssText = 'color:var(--coral);font-size:.72rem;margin-top:4px';
+    el.parentNode.appendChild(err);
+  }
+  err.textContent = '⚠️ ' + msg;
+}
+function clearError(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.border = '';
+  const err = el.parentNode.querySelector('.v-err');
+  if (err) err.remove();
+}
+function clearAllErrors(ids) { ids.forEach(clearError); }
+
+// ── AUTH CHECK ────────────────────────────────
+async function init() {
+  const r = await fetch(`${API}/api/auth/me`,{credentials:'include'});
+  if(!r.ok) return window.location.href='login.html';
+  const u = await r.json();
+  if(u.role!=='warden') return window.location.href='login.html';
+  document.getElementById('sideName').textContent   = u.name;
+  document.getElementById('sideAvatar').textContent = u.name[0].toUpperCase();
+  document.getElementById('greetMsg').textContent   = `Welcome, ${u.name}`;
+  loadDashboard();
+}
+
+async function logout() {
+  await fetch(`${API}/api/auth/logout`,{method:'POST',credentials:'include'});
+  window.location.href='login.html';
+}
+
+function showSection(name, el) {
+  document.querySelectorAll('.main > section').forEach(s=>s.style.display='none');
+  document.getElementById('sec-'+name).style.display='';
+  document.querySelectorAll('.sidebar a').forEach(a=>a.classList.remove('active'));
+  if(el) el.classList.add('active');
+  if(name==='leaves') loadLeaves();
+  if(name==='announcements') loadAnnouncements();
+}
+
+// ── DASHBOARD ─────────────────────────────────
+async function loadDashboard() {
+  const d = await fetchJSON('/api/warden/dashboard');
+  if(!d) return;
+  document.getElementById('s-students').textContent = d.total_students;
+  document.getElementById('s-pending').textContent  = d.pending_leaves;
+  document.getElementById('s-today').textContent    = d.approved_today;
+  document.getElementById('s-ann').textContent      = d.total_announcements;
+  loadDashLeaves();
+}
+
+async function loadDashLeaves() {
+  const ls = await fetchJSON('/api/warden/leave-requests');
+  const pending = ls?.filter(l=>l.status==='pending').slice(0,5) || [];
+  document.getElementById('dashLeaveWrap').innerHTML = buildLeavesTable(pending, true);
+}
+
+// ── LEAVES ────────────────────────────────────
+async function loadLeaves() {
+  const ls = await fetchJSON('/api/warden/leave-requests');
+  document.getElementById('leavesTbody').innerHTML = ls?.length
+    ? ls.map(l=>`<tr>
+        <td><strong>${l.student_name}</strong><br><small style="color:var(--muted)">${l.email}</small></td>
+        <td>${l.roll_no?`<span class="chip">${l.roll_no}</span>`:'—'}</td>
+        <td>${fmtDate(l.from_date)}</td>
+        <td>${fmtDate(l.to_date)}</td>
+        <td style="max-width:150px">${l.reason}</td>
+        <td>${l.destination||'—'}</td>
+        <td>${badge(l.status)}</td>
+        <td>${l.status==='pending'?`
+          <button class="btn btn-sm btn-green" onclick="openModal(${l.id},'approve')">✅</button>
+          <button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="openModal(${l.id},'reject')">✗</button>
+        `:`<span style="color:var(--muted);font-size:.75rem">${l.remarks||'—'}</span>`}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="8"><div class="empty"><div class="e-icon">📅</div><h4>No leave requests</h4></div></td></tr>`;
+}
+
+function buildLeavesTable(ls, mini) {
+  if(!ls.length) return `<div class="empty"><div class="e-icon">✅</div><h4>No pending requests</h4></div>`;
+  return `<div class="tbl-wrap"><table>
+    <thead><tr><th>Student</th><th>From</th><th>To</th><th>Reason</th><th>Status</th></tr></thead>
+    <tbody>${ls.map(l=>`<tr>
+      <td>${l.student_name}</td><td>${fmtDate(l.from_date)}</td><td>${fmtDate(l.to_date)}</td>
+      <td>${l.reason}</td><td>${badge(l.status)}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+function openModal(id, action) {
+  document.getElementById('modal-leave-id').value = id;
+  document.getElementById('modal-action').value   = action;
+  document.getElementById('modalTitle').textContent = action==='approve' ? '✅ Approve Leave' : '✗ Reject Leave';
+  document.getElementById('modalConfirmBtn').className = `btn ${action==='approve'?'btn-green':'btn-danger'}`;
+  document.getElementById('modal-remarks').value = '';
+  document.getElementById('remarksModal').classList.add('show');
+}
+
+async function confirmAction() {
+  const id     = document.getElementById('modal-leave-id').value;
+  const action = document.getElementById('modal-action').value;
+  const remarks= document.getElementById('modal-remarks').value.trim();
+  const r = await fetchJSON(`/api/warden/leave-requests/${id}/${action}`,'PUT',{remarks});
+  if(r) { toast(r.message,'success'); closeModal(); loadLeaves(); loadDashboard(); }
+}
+
+function closeModal() { document.getElementById('remarksModal').classList.remove('show'); }
+
+// ── ANNOUNCEMENTS (with validation) ───────────
+function toggleAnnForm() {
+  const p = document.getElementById('annFormPanel');
+  p.style.display = p.style.display==='none' ? '' : 'none';
+  if (p.style.display === 'none') clearAllErrors(['ann-title','ann-content']);
+}
+
+async function loadAnnouncements() {
+  const ann = await fetchJSON('/api/warden/announcements');
+  document.getElementById('annListWrap').innerHTML = ann?.length
+    ? ann.map(a=>`<div class="panel" style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <h4 style="font-size:.95rem;margin-bottom:6px">📢 ${a.title}</h4>
+            <p style="font-size:.87rem;color:rgba(255,255,255,.78);line-height:1.65">${a.content}</p>
+            <small style="color:var(--muted);display:block;margin-top:8px">${fmtDate(a.created_at)} · by ${a.posted_by_name}</small>
+          </div>
+          <button class="btn btn-sm btn-danger" style="margin-left:16px;flex-shrink:0" onclick="deleteAnn(${a.id})">🗑</button>
+        </div>
+      </div>`).join('')
+    : `<div class="empty"><div class="e-icon">📢</div><h4>No announcements yet</h4></div>`;
+}
+
+async function postAnnouncement() {
+  clearAllErrors(['ann-title','ann-content']);
+
+  const title   = document.getElementById('ann-title').value.trim();
+  const content = document.getElementById('ann-content').value.trim();
+
+  let valid = true;
+
+  if (!title) {
+    showError('ann-title', 'Title is required'); valid = false;
+  } else if (title.length < 3) {
+    showError('ann-title', 'Title must be at least 3 characters'); valid = false;
+  }
+
+  if (!content) {
+    showError('ann-content', 'Content is required'); valid = false;
+  } else if (content.length < 10) {
+    showError('ann-content', 'Content must be at least 10 characters'); valid = false;
+  }
+
+  if (!valid) return;
+
+  const r = await fetchJSON('/api/warden/announcements', 'POST', { title, content });
+  if (r) {
+    toast(r.message, 'success');
+    toggleAnnForm();
+    loadAnnouncements();
+    document.getElementById('ann-title').value   = '';
+    document.getElementById('ann-content').value = '';
+  }
+}
+
+async function deleteAnn(id) {
+  if(!confirm('Delete this announcement?')) return;
+  const r = await fetchJSON(`/api/warden/announcements/${id}`,'DELETE');
+  if(r) { toast(r.message,'success'); loadAnnouncements(); }
+}
+
+// ── CHANGE PASSWORD ───────────────────────────
+document.addEventListener('input', function(e) {
+  if(e.target.id !== 'cp-new') return;
+  const val = e.target.value;
+  const bar = document.getElementById('strengthBar');
+  const text = document.getElementById('strengthText');
+  let strength = 0;
+  if(val.length >= 6)           strength++;
+  if(val.length >= 10)          strength++;
+  if(/[A-Z]/.test(val))         strength++;
+  if(/[0-9]/.test(val))         strength++;
+  if(/[^A-Za-z0-9]/.test(val))  strength++;
+  const levels = [
+    { w:'0%',c:'transparent',t:'' },{ w:'25%',c:'var(--coral)',t:'Weak' },
+    { w:'50%',c:'var(--gold)',t:'Fair' },{ w:'75%',c:'#4dd68c',t:'Good' },
+    { w:'100%',c:'var(--teal)',t:'Strong ✅' },
+  ];
+  bar.style.width=levels[strength].w; bar.style.background=levels[strength].c;
+  text.textContent=levels[strength].t; text.style.color=levels[strength].c;
+});
+
+async function changePassword() {
+  const old_password=document.getElementById('cp-old').value;
+  const new_password=document.getElementById('cp-new').value;
+  const confirm=document.getElementById('cp-confirm').value;
+  const msg=document.getElementById('cp-msg');
+  if(!old_password||!new_password||!confirm){msg.style.color='var(--coral)';msg.textContent='⚠️ Please fill all fields.';return;}
+  if(new_password!==confirm){msg.style.color='var(--coral)';msg.textContent='⚠️ Passwords do not match.';return;}
+  if(new_password.length<6){msg.style.color='var(--coral)';msg.textContent='⚠️ Min 6 characters required.';return;}
+  const r=await fetchJSON('/api/auth/change-password','POST',{old_password,new_password});
+  if(r){
+    msg.style.color='var(--teal)'; msg.textContent='✅ '+r.message;
+    document.getElementById('cp-old').value=''; document.getElementById('cp-new').value=''; document.getElementById('cp-confirm').value='';
+    setTimeout(async()=>{await fetch('/api/auth/logout',{method:'POST',credentials:'include'});window.location.href='login.html';},2000);
+  }
+}
+
+// ── HELPERS ───────────────────────────────────
+async function fetchJSON(url,method='GET',body=null){try{const opts={method,credentials:'include',headers:{'Content-Type':'application/json'}};if(body)opts.body=JSON.stringify(body);const r=await fetch(API+url,opts);const d=await r.json();if(!r.ok){toast(d.message,'error');return null;}return d;}catch{toast('Server error','error');return null;}}
+function badge(s){const m={pending:'b-pending',approved:'b-approved',rejected:'b-rejected'};return `<span class="badge ${m[s]||''}">${s}</span>`;}
+function fmtDate(d){return d?new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—';}
+function toast(msg,type='info'){const c=document.getElementById('toast-container');const t=document.createElement('div');t.className=`toast t-${type}`;t.innerHTML=`<span>${type==='success'?'✅':type==='error'?'❌':'ℹ️'}</span> ${msg}`;c.appendChild(t);setTimeout(()=>t.remove(),3500);}
+
+init();
+</script>
+<div class="modal-overlay" id="sessionModal"><div class="modal" style="text-align:center"><div style="font-size:2.5rem;margin-bottom:12px">⏰</div><h3 style="margin-bottom:8px">Session Expiring Soon</h3><p style="font-size:.87rem;color:var(--muted);margin-bottom:18px">You have been inactive. You will be logged out in<br><strong id="sessionCountdown" style="font-size:1.4rem;color:var(--coral)">60</strong> seconds.</p><div style="display:flex;gap:10px"><button class="btn btn-primary" style="flex:1" onclick="keepSessionAlive()">✅ Stay Logged In</button><button class="btn btn-secondary" style="flex:1" onclick="sessionLogout()">🚪 Logout Now</button></div></div></div><script>
+const INACTIVITY_LIMIT = 30 * 60 * 1000;
+const WARNING_BEFORE   =  1 * 60 * 1000;
+let inactivityTimer, countdownTimer, countdownVal;
+function resetInactivityTimer() {
+  clearTimeout(inactivityTimer);
+  inactivityTimer = setTimeout(showSessionWarning, INACTIVITY_LIMIT - WARNING_BEFORE);
+}
+function showSessionWarning() {
+  countdownVal = 60;
+  document.getElementById("sessionCountdown").textContent = countdownVal;
+  document.getElementById("sessionModal").classList.add("show");
+  countdownTimer = setInterval(() => {
+    countdownVal--;
+    document.getElementById("sessionCountdown").textContent = countdownVal;
+    if (countdownVal <= 0) { clearInterval(countdownTimer); sessionLogout(); }
+  }, 1000);
+}
+function keepSessionAlive() {
+  clearInterval(countdownTimer);
+  document.getElementById("sessionModal").classList.remove("show");
+  fetch("/api/auth/me", { credentials: "include" });
+  resetInactivityTimer();
+}
+async function sessionLogout() {
+  clearInterval(countdownTimer);
+  document.getElementById("sessionModal").classList.remove("show");
+  await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+  window.location.href = "login.html";
+}
+["mousemove","mousedown","keydown","touchstart","scroll","click"].forEach(e =>
+  document.addEventListener(e, resetInactivityTimer, { passive: true })
+);
+resetInactivityTimer();
+
+// ── MOBILE SIDEBAR ────────────────────────────
+function toggleSidebar() {
+  const sb  = document.querySelector('.sidebar');
+  const btn = document.getElementById('hamburger');
+  const ov  = document.getElementById('sidebarOverlay');
+  const open = sb.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  ov.classList.toggle('show', open);
+  document.body.style.overflow = open ? 'hidden' : '';
+}
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('hamburger').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+document.querySelectorAll('.sidebar a').forEach(a =>
+  a.addEventListener('click', () => { if(window.innerWidth < 900) closeSidebar(); })
+);
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeSidebar(); });
+</script>
+</body>
+</html>

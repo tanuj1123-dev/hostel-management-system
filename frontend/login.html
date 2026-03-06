@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HostelHub — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{--navy:#080f1a;--navy-2:#0d1b2e;--teal:#00c2bb;--teal-g:rgba(0,194,187,.3);--gold:#f0a500;--muted:rgba(255,255,255,.5);--border:rgba(0,194,187,.18);--font:'DM Sans',sans-serif;--mono:'Space Mono',monospace}
+  html,body{height:100%;font-family:var(--font);background:var(--navy);color:#fff;overflow:hidden}
+  .bg{position:fixed;inset:0;z-index:0;
+    background:radial-gradient(ellipse 70% 60% at 15% 50%,rgba(0,194,187,.13) 0%,transparent 65%),
+               radial-gradient(ellipse 55% 55% at 85% 20%,rgba(240,165,0,.08) 0%,transparent 60%),
+               linear-gradient(160deg,#080f1a 0%,#0d1b2e 50%,#091420 100%)}
+  .bg::before{content:'';position:absolute;inset:0;
+    background-image:linear-gradient(rgba(0,194,187,.04) 1px,transparent 1px),
+                     linear-gradient(90deg,rgba(0,194,187,.04) 1px,transparent 1px);
+    background-size:48px 48px;animation:gridMove 20s linear infinite}
+  .orb{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none;animation:float 10s ease-in-out infinite}
+  .o1{width:380px;height:380px;background:radial-gradient(circle,rgba(0,194,187,.18) 0%,transparent 70%);top:-80px;left:-60px}
+  .o2{width:280px;height:280px;background:radial-gradient(circle,rgba(240,165,0,.12) 0%,transparent 70%);bottom:-60px;right:5%;animation-delay:-5s;animation-duration:12s}
+  .page{position:relative;z-index:1;height:100vh;display:grid;grid-template-columns:1fr 1fr}
+  /* LEFT */
+  .left{display:flex;flex-direction:column;justify-content:center;padding:60px 65px;position:relative}
+  .left::after{content:'';position:absolute;right:0;top:8%;bottom:8%;width:1px;background:linear-gradient(to bottom,transparent,var(--border),transparent)}
+  .brand{display:flex;align-items:center;gap:14px;margin-bottom:52px;animation:fadeUp .6s ease both}
+  .b-icon{width:46px;height:46px;background:linear-gradient(135deg,var(--teal),#007f7c);border-radius:13px;display:grid;place-items:center;font-size:1.3rem;box-shadow:0 0 26px var(--teal-g)}
+  .b-name{font-size:1.25rem;font-weight:700;letter-spacing:-.02em;line-height:1}
+  .b-name span{color:var(--teal)}
+  .b-tag{font-size:.62rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .hero{animation:fadeUp .6s .1s ease both}
+  .hero h1{font-size:clamp(1.9rem,2.8vw,2.7rem);font-weight:700;line-height:1.15;letter-spacing:-.03em;margin-bottom:16px}
+  .hero h1 .ac{background:linear-gradient(90deg,var(--teal),#6ee7e3);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .hero p{font-size:.92rem;color:var(--muted);line-height:1.75;max-width:360px;margin-bottom:44px}
+  .stats{display:flex;gap:32px;animation:fadeUp .6s .2s ease both}
+  .st-num{font-family:var(--mono);font-size:1.75rem;font-weight:700;color:var(--teal);line-height:1}
+  .st-num sup{font-size:.75rem;color:var(--gold);vertical-align:super}
+  .st-lbl{font-size:.68rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:3px}
+  .st+.st{padding-left:32px;border-left:1px solid rgba(255,255,255,.07)}
+  /* RIGHT */
+  .right{display:flex;flex-direction:column;justify-content:center;align-items:center;padding:60px}
+  .card{width:100%;max-width:420px;background:rgba(13,27,46,.75);border:1px solid var(--border);border-radius:26px;padding:44px 40px;backdrop-filter:blur(24px);box-shadow:0 0 0 1px rgba(255,255,255,.04) inset,0 24px 60px rgba(0,0,0,.45);animation:cardIn .7s cubic-bezier(.34,1.56,.64,1) both;position:relative;overflow:hidden}
+  .card::before{content:'';position:absolute;top:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,var(--teal),transparent);opacity:.6}
+  .card-head{text-align:center;margin-bottom:30px}
+  .lock{width:60px;height:60px;border-radius:50%;background:rgba(0,194,187,.1);border:1px solid var(--border);display:grid;place-items:center;font-size:1.4rem;margin:0 auto 16px;animation:pulse 3s ease infinite}
+  .card-head h2{font-size:1.45rem;font-weight:700;letter-spacing:-.02em;margin-bottom:5px}
+  .card-head p{font-size:.8rem;color:var(--muted)}
+  /* role tabs */
+  .rtabs{display:flex;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px;padding:4px;margin-bottom:24px;gap:3px}
+  .rtab{flex:1;padding:8px 10px;border:none;border-radius:8px;background:transparent;color:var(--muted);font-family:var(--font);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:5px}
+  .rtab:hover{color:#fff}
+  .rtab.active{background:rgba(0,194,187,.15);color:var(--teal);border:1px solid rgba(0,194,187,.25)}
+  /* field */
+  .field{margin-bottom:18px}
+  .field label{display:block;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;transition:color .2s}
+  .field:focus-within label{color:var(--teal)}
+  .fi-wrap{position:relative}
+  .fi-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:.95rem;color:rgba(255,255,255,.2);pointer-events:none;transition:color .2s}
+  .field:focus-within .fi-icon{color:var(--teal)}
+  .field input{width:100%;padding:12px 14px 12px 42px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:11px;color:#fff;font-family:var(--font);font-size:.9rem;outline:none;transition:all .22s}
+  .field input::placeholder{color:rgba(255,255,255,.2)}
+  .field input:focus{border-color:var(--teal);background:rgba(0,194,187,.07);box-shadow:0 0 0 3px rgba(0,194,187,.1)}
+  .eye{position:absolute;right:13px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:.85rem;transition:color .2s}
+  .eye:hover{color:var(--teal)}
+  .frow{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+  .cbwrap{display:flex;align-items:center;gap:8px;cursor:pointer}
+  .cbwrap input[type=checkbox]{appearance:none;width:15px;height:15px;border:1.5px solid rgba(255,255,255,.2);border-radius:4px;background:rgba(255,255,255,.04);cursor:pointer;position:relative;transition:all .2s;flex-shrink:0}
+  .cbwrap input:checked{background:var(--teal);border-color:var(--teal)}
+  .cbwrap input:checked::after{content:'✓';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:.6rem;color:var(--navy);font-weight:700}
+  .cbwrap span{font-size:.78rem;color:var(--muted)}
+  .fl{font-size:.78rem;color:var(--teal);text-decoration:none;font-weight:500}
+  .fl:hover{opacity:.75}
+  .btn-login{width:100%;padding:13px;background:linear-gradient(135deg,var(--teal),#007f7c);border:none;border-radius:11px;color:#fff;font-family:var(--font);font-size:.92rem;font-weight:700;letter-spacing:.02em;cursor:pointer;transition:all .3s;position:relative;overflow:hidden;box-shadow:0 6px 22px rgba(0,194,187,.35)}
+  .btn-login::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);transition:left .5s}
+  .btn-login:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(0,194,187,.5)}
+  .btn-login:hover::before{left:100%}
+  .btn-login:active{transform:scale(.98)}
+  .err-msg{background:rgba(232,83,58,.12);border:1px solid rgba(232,83,58,.3);border-radius:9px;padding:10px 14px;font-size:.82rem;color:#ff8a77;margin-bottom:16px;display:none}
+  .divider{display:flex;align-items:center;gap:10px;margin:20px 0;font-size:.7rem;color:rgba(255,255,255,.18);letter-spacing:.07em;text-transform:uppercase}
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.07)}
+  .form-foot{text-align:center;font-size:.77rem;color:var(--muted)}
+  .form-foot a{color:var(--teal);font-weight:600;text-decoration:none}
+  /* animations */
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+  @keyframes cardIn{from{opacity:0;transform:translateY(28px) scale(.97)}to{opacity:1;transform:none}}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-28px)}}
+  @keyframes gridMove{from{background-position:0 0}to{background-position:48px 48px}}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,194,187,.25)}50%{box-shadow:0 0 0 9px rgba(0,194,187,0)}}
+  @media(max-width:860px){.page{grid-template-columns:1fr}.left{display:none}.right{padding:24px}}
+</style>
+</head>
+<body>
+<div class="bg"><div class="orb o1"></div><div class="orb o2"></div></div>
+
+<div class="page">
+  <!-- LEFT -->
+  <div class="left">
+    <div class="brand">
+      <div class="b-icon">🏠</div>
+      <div><div class="b-name">Hostel<span>Hub</span></div><div class="b-tag">JUIT Management System</div></div>
+    </div>
+    <div class="hero">
+      <h1>Manage Your<br><span class="ac">Hostel Smarter</span><br>Not Harder.</h1>
+      <p>Centralized platform for admissions, rooms, fees, complaints, leaves and announcements — all in one place.</p>
+    </div>
+    <div class="stats">
+      <div class="st"><div class="st-num">5<sup>+</sup></div><div class="st-lbl">User Roles</div></div>
+      <div class="st"><div class="st-num">6</div><div class="st-lbl">Core Modules</div></div>
+      <div class="st"><div class="st-num">100<sup>%</sup></div><div class="st-lbl">Automated</div></div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right">
+    <div class="card">
+      <div class="card-head">
+        <div class="lock">🔐</div>
+        <h2>Welcome Back</h2>
+        <p>Sign in to access your dashboard</p>
+      </div>
+
+      <div class="rtabs">
+        <button class="rtab active" onclick="setRole(this,'admin')">👨‍💼 Admin</button>
+        <button class="rtab" onclick="setRole(this,'student')">👩‍🎓 Student</button>
+        <button class="rtab" onclick="setRole(this,'warden')">🧑‍✈️ Warden</button>
+        <button class="rtab" onclick="setRole(this,'accountant')">💰 Acct</button>
+        <button class="rtab" onclick="setRole(this,'maintenance')">🔧 Maint</button>
+      </div>
+
+      <div class="err-msg" id="errMsg">❌ Invalid email or password.</div>
+
+      <div class="field">
+        <label>Email Address</label>
+        <div class="fi-wrap">
+          <span class="fi-icon">✉️</span>
+          <input type="email" id="email" placeholder="you@hostel.com">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Password</label>
+        <div class="fi-wrap">
+          <span class="fi-icon">🔑</span>
+          <input type="password" id="password" placeholder="Enter your password">
+          <button class="eye" onclick="togglePwd()">👁</button>
+        </div>
+      </div>
+
+      <div class="frow">
+        <label class="cbwrap"><input type="checkbox"><span>Remember me</span></label>
+        <a href="#" class="fl">Forgot password?</a>
+      </div>
+
+      <button class="btn-login" id="loginBtn" onclick="doLogin()">Sign In →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function setRole(btn) {
+    document.querySelectorAll('.rtab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function fillCreds(email) {
+    document.getElementById('email').value = email;
+    document.getElementById('password').value = 'password';
+  }
+
+  function togglePwd() {
+    const i = document.getElementById('password');
+    i.type = i.type === 'password' ? 'text' : 'password';
+  }
+
+  async function doLogin() {
+    const email    = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const btn      = document.getElementById('loginBtn');
+    const err      = document.getElementById('errMsg');
+
+    if (!email || !password) { err.textContent = '⚠️ Please enter email and password.'; err.style.display='block'; return; }
+
+    btn.textContent = 'Signing in...'; btn.disabled = true;
+    err.style.display = 'none';
+
+    try {
+      const res  = await fetch('/api/auth/login', {
+        method:'POST', credentials:'include',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+
+      if (!res.ok) { err.textContent = '❌ ' + data.message; err.style.display='block'; btn.textContent='Sign In →'; btn.disabled=false; return; }
+
+      btn.textContent = '✓ Redirecting...';
+      const routes = { admin:'admin.html', student:'student.html', warden:'warden.html', accountant:'accountant.html', maintenance:'maintenance.html' };
+      window.location.href = routes[data.role] || 'login.html';
+    } catch(e) {
+      err.textContent = '❌ Could not reach server. Is it running?';
+      err.style.display = 'block';
+      btn.textContent = 'Sign In →'; btn.disabled = false;
+    }
+  }
+
+  document.addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+</script>
+</body>
+</html>

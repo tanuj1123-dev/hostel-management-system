@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Student Dashboard — HostelHub</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+<button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">🏠</div>
+    <div class="brand-text">
+      <div class="b-name">Hostel<span>Hub</span></div>
+      <div class="b-role">Student Portal</div>
+    </div>
+  </div>
+  <span class="nav-label">My Hostel</span>
+  <a href="#" class="active" onclick="showSection('dashboard',this)"><span class="icon">📊</span> Dashboard</a>
+  <a href="#" onclick="showSection('apply',this)"><span class="icon">📝</span> Apply for Hostel</a>
+  <a href="#" onclick="showSection('fees',this)"><span class="icon">💰</span> My Fees</a>
+  <a href="#" onclick="showSection('complaints',this)"><span class="icon">🔧</span> Complaints</a>
+  <a href="#" onclick="showSection('leaves',this)"><span class="icon">📅</span> Leave / Outpass</a>
+  <a href="#" onclick="showSection('announcements',this)"><span class="icon">📢</span> Announcements</a>
+  <span class="nav-label">Account</span>
+  <a href="#" onclick="showSection('change-password',this)"><span class="icon">🔑</span> Change Password</a>
+  <div class="sidebar-footer">
+    <div class="user-chip">
+      <div class="avatar" id="sideAvatar">S</div>
+      <div class="user-info">
+        <div class="u-name" id="sideName">Student</div>
+        <div class="u-role">Student</div>
+      </div>
+      <button class="logout-btn" onclick="logout()" title="Logout">⏻</button>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+
+  <!-- DASHBOARD -->
+  <section id="sec-dashboard">
+    <div class="topbar">
+      <div><h1 id="greetH">Good morning!</h1><p>Here's your hostel overview</p></div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="s-icon s-teal">🏠</div><div class="s-val" id="d-room">—</div><div class="s-label">My Room</div></div>
+      <div class="stat-card"><div class="s-icon s-coral">💰</div><div class="s-val" id="d-fees">—</div><div class="s-label">Pending Fees</div></div>
+      <div class="stat-card"><div class="s-icon s-gold">🔧</div><div class="s-val" id="d-complaints">—</div><div class="s-label">Open Complaints</div></div>
+      <div class="stat-card"><div class="s-icon s-green">📅</div><div class="s-val" id="d-leaves">—</div><div class="s-label">Pending Leaves</div></div>
+    </div>
+    <div class="panel" id="profilePanel">
+      <div class="panel-head"><h3>My Profile</h3></div>
+      <div id="profileContent"><div class="empty"><div class="e-icon">⏳</div><p>Loading...</p></div></div>
+    </div>
+  </section>
+
+  <!-- APPLY HOSTEL -->
+  <section id="sec-apply" style="display:none">
+    <div class="topbar"><div><h1>Apply for Hostel</h1><p>Submit your hostel accommodation request</p></div></div>
+    <div id="appStatusBanner"></div>
+    <div class="panel" style="max-width:560px" id="applyFormPanel">
+      <div class="panel-head"><h3>Hostel Application Form</h3></div>
+      <div class="form-row">
+        <div class="form-group"><label>Full Name</label><input type="text" id="a-name" placeholder="Your full name"></div>
+        <div class="form-group"><label>Roll Number</label><input type="text" id="a-roll" placeholder="e.g. 241032048"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Department</label><input type="text" id="a-dept" placeholder="e.g. Computer Science"></div>
+        <div class="form-group"><label>Year</label>
+          <select id="a-year"><option value="1">1st Year</option><option value="2">2nd Year</option><option value="3">3rd Year</option><option value="4">4th Year</option></select>
+        </div>
+      </div>
+      <div class="form-group"><label>Phone Number</label><input type="tel" id="a-phone" placeholder="10-digit mobile number"></div>
+      <div class="form-group"><label>Reason for Applying</label><textarea id="a-reason" rows="3" placeholder="Briefly explain why you need hostel accommodation..."></textarea></div>
+      <button class="btn btn-primary" onclick="submitApplication()">Submit Application</button>
+    </div>
+  </section>
+
+  <!-- FEES -->
+  <section id="sec-fees" style="display:none">
+    <div class="topbar"><div><h1>My Fees</h1><p>View and pay your hostel fees</p></div></div>
+    <div class="panel">
+      <div class="panel-head"><h3>Fee Records</h3></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Description</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Paid On</th><th>Action</th></tr></thead>
+        <tbody id="feesTbody"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- COMPLAINTS -->
+  <section id="sec-complaints" style="display:none">
+    <div class="topbar">
+      <div><h1>Complaints</h1><p>Register and track maintenance complaints</p></div>
+      <button class="btn btn-primary" onclick="toggleComplaintForm()">➕ New Complaint</button>
+    </div>
+    <div class="panel" id="complaintFormPanel" style="display:none;max-width:520px">
+      <div class="panel-head"><h3>New Complaint</h3></div>
+      <div class="form-group"><label>Category</label>
+        <select id="c-cat">
+          <option value="electricity">⚡ Electricity</option>
+          <option value="water">💧 Water</option>
+          <option value="wifi">📶 WiFi</option>
+          <option value="furniture">🪑 Furniture</option>
+          <option value="cleanliness">🧹 Cleanliness</option>
+          <option value="other">🔧 Other</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Description</label><textarea id="c-desc" rows="3" placeholder="Describe the issue in detail..."></textarea></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" onclick="raiseComplaint()">Submit Complaint</button>
+        <button class="btn btn-secondary" onclick="toggleComplaintForm()">Cancel</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>My Complaints</h3></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Category</th><th>Description</th><th>Status</th><th>Visit Date</th><th>Raised On</th></tr></thead>
+        <tbody id="complaintsTbody"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- LEAVES -->
+  <section id="sec-leaves" style="display:none">
+    <div class="topbar">
+      <div><h1>Leave / Outpass</h1><p>Request and track leave applications</p></div>
+      <button class="btn btn-primary" onclick="toggleLeaveForm()">➕ Request Leave</button>
+    </div>
+    <div class="panel" id="leaveFormPanel" style="display:none;max-width:520px">
+      <div class="panel-head"><h3>New Leave Request</h3></div>
+      <div class="form-row">
+        <div class="form-group"><label>From Date</label><input type="date" id="l-from"></div>
+        <div class="form-group"><label>To Date</label><input type="date" id="l-to"></div>
+      </div>
+      <div class="form-group"><label>Destination</label><input type="text" id="l-dest" placeholder="Where are you going?"></div>
+      <div class="form-group"><label>Reason</label><textarea id="l-reason" rows="3" placeholder="Reason for leave..."></textarea></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" onclick="requestLeave()">Submit Request</button>
+        <button class="btn btn-secondary" onclick="toggleLeaveForm()">Cancel</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>My Leave Requests</h3></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>From</th><th>To</th><th>Reason</th><th>Destination</th><th>Status</th><th>Remarks</th><th>Action</th></tr></thead>
+        <tbody id="leavesTbody"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ANNOUNCEMENTS -->
+  <section id="sec-announcements" style="display:none">
+    <div class="topbar"><div><h1>Announcements</h1><p>Latest notices from warden</p></div></div>
+    <div id="announcementsGrid"></div>
+  </section>
+
+  <!-- CHANGE PASSWORD -->
+  <section id="sec-change-password" style="display:none">
+    <div class="topbar">
+      <div><h1>Change Password</h1><p>Update your login password</p></div>
+    </div>
+    <div class="panel" style="max-width:460px">
+      <div class="panel-head"><h3>Update Password</h3></div>
+      <div class="form-group">
+        <label>Current Password</label>
+        <input type="password" id="cp-old" placeholder="Enter current password">
+      </div>
+      <div class="form-group">
+        <label>New Password</label>
+        <input type="password" id="cp-new" placeholder="Min 6 characters">
+      </div>
+      <div class="form-group">
+        <label>Confirm New Password</label>
+        <input type="password" id="cp-confirm" placeholder="Re-enter new password">
+      </div>
+      <div style="margin-bottom:18px">
+        <div style="font-size:.7rem;color:var(--muted);margin-bottom:6px">Password Strength</div>
+        <div style="height:6px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden">
+          <div id="strengthBar" style="height:100%;width:0%;border-radius:99px;transition:all .3s"></div>
+        </div>
+        <div id="strengthText" style="font-size:.72rem;margin-top:4px;color:var(--muted)"></div>
+      </div>
+      <button class="btn btn-primary" onclick="changePassword()">🔑 Update Password</button>
+      <div id="cp-msg" style="margin-top:14px;font-size:.83rem"></div>
+    </div>
+  </section>
+
+</main>
+</div>
+<div id="toast-container"></div>
+
+<script>
+const API = '';
+let currentStudent = null;
+
+// ── VALIDATION HELPERS ────────────────────────
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.border = '1.5px solid var(--coral)';
+  let err = el.parentNode.querySelector('.v-err');
+  if (!err) {
+    err = document.createElement('div');
+    err.className = 'v-err';
+    err.style.cssText = 'color:var(--coral);font-size:.72rem;margin-top:4px';
+    el.parentNode.appendChild(err);
+  }
+  err.textContent = '⚠️ ' + msg;
+}
+function clearError(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.border = '';
+  const err = el.parentNode.querySelector('.v-err');
+  if (err) err.remove();
+}
+function clearAllErrors(ids) { ids.forEach(clearError); }
+
+// ── AUTH CHECK ────────────────────────────────
+async function init() {
+  const r = await fetch(`${API}/api/auth/me`,{credentials:'include'});
+  if(!r.ok) return window.location.href='login.html';
+  const u = await r.json();
+  if(u.role!=='student') return window.location.href='login.html';
+  currentStudent = u;
+  document.getElementById('sideName').textContent   = u.name;
+  document.getElementById('sideAvatar').textContent = u.name[0].toUpperCase();
+  const h = new Date().getHours();
+  document.getElementById('greetH').textContent = `Good ${h<12?'morning':h<18?'afternoon':'evening'}, ${u.name}!`;
+  loadDashboard();
+}
+
+async function logout() {
+  await fetch(`${API}/api/auth/logout`,{method:'POST',credentials:'include'});
+  window.location.href='login.html';
+}
+
+function showSection(name, el) {
+  document.querySelectorAll('.main > section').forEach(s=>s.style.display='none');
+  document.getElementById('sec-'+name).style.display='';
+  document.querySelectorAll('.sidebar a').forEach(a=>a.classList.remove('active'));
+  if(el) el.classList.add('active');
+  const loaders = {fees:loadFees,complaints:loadComplaints,leaves:loadLeaves,announcements:loadAnnouncements,apply:loadAppStatus};
+  if(loaders[name]) loaders[name]();
+}
+
+// ── DASHBOARD ─────────────────────────────────
+async function loadDashboard() {
+  const d = await fetchJSON('/api/student/dashboard');
+  if(!d) return;
+  const p = d.profile;
+  currentStudent = { ...currentStudent, ...p };
+  document.getElementById('d-room').textContent       = p?.room_number || 'N/A';
+  document.getElementById('d-fees').textContent       = d.pending_fees;
+  document.getElementById('d-complaints').textContent = d.open_complaints;
+  document.getElementById('d-leaves').textContent     = d.pending_leaves;
+  document.getElementById('profileContent').innerHTML = p ? `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px">
+      ${row('👤','Name',p.name)}${row('✉️','Email',p.email)}${row('🎓','Roll No',p.roll_no||'—')}
+      ${row('📚','Department',p.department||'—')}${row('📅','Year',p.year?`Year ${p.year}`:'—')}${row('📞','Phone',p.phone||'—')}
+      ${row('🏠','Hostel',p.hostel_name||'Not Assigned')}${row('🚪','Room',p.room_number||'Not Assigned')}
+    </div>` : `<div class="empty"><div class="e-icon">👤</div><p>No profile data</p></div>`;
+}
+
+function row(icon,label,val){return `<div style="background:var(--glass-2);border:1px solid var(--border-s);border-radius:10px;padding:14px 16px"><div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:4px">${icon} ${label}</div><div style="font-weight:600;font-size:.9rem">${val}</div></div>`;}
+
+// ── APPLY HOSTEL ──────────────────────────────
+async function loadAppStatus() {
+  const apps = await fetchJSON('/api/student/application-status');
+  const banner    = document.getElementById('appStatusBanner');
+  const formPanel = document.getElementById('applyFormPanel');
+  if(apps?.length) {
+    const latest = apps[0];
+    const colors = {pending:'var(--gold)',approved:'var(--green)',rejected:'var(--coral)'};
+    banner.innerHTML = `<div style="background:var(--glass);border:1px solid ${colors[latest.status]||'var(--border)'};border-radius:12px;padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:1.3rem">${latest.status==='approved'?'🎉':latest.status==='rejected'?'❌':'⏳'}</span>
+      <div><strong>Application ${latest.status}</strong><br>
+      <small style="color:var(--muted)">${latest.status==='approved'?`Hostel: ${latest.hostel_name}, Room: ${latest.room_number}`:latest.status==='pending'?'Your application is under review':'Your application was rejected. You may apply again.'}</small></div>
+    </div>`;
+    if(latest.status==='approved'||latest.status==='pending') formPanel.style.display='none';
+  }
+}
+
+async function submitApplication() {
+  const ids = ['a-name','a-roll','a-dept','a-phone','a-reason'];
+  clearAllErrors(ids);
+  const name   = document.getElementById('a-name').value.trim();
+  const roll   = document.getElementById('a-roll').value.trim();
+  const dept   = document.getElementById('a-dept').value.trim();
+  const phone  = document.getElementById('a-phone').value.trim();
+  const reason = document.getElementById('a-reason').value.trim();
+  let valid = true;
+  if (!name)  { showError('a-name',  'Full name is required'); valid = false; }
+  else if (name.length < 2) { showError('a-name', 'Name must be at least 2 characters'); valid = false; }
+  if (!roll)  { showError('a-roll',  'Roll number is required'); valid = false; }
+  if (!dept)  { showError('a-dept',  'Department is required'); valid = false; }
+  if (!phone) { showError('a-phone', 'Phone number is required'); valid = false; }
+  else if (!/^\d{10}$/.test(phone)) { showError('a-phone', 'Phone must be exactly 10 digits'); valid = false; }
+  if (!reason) { showError('a-reason', 'Please provide a reason'); valid = false; }
+  if (!valid) return;
+  const r = await fetchJSON('/api/student/apply-hostel', 'POST', {
+    full_name: name, roll_no: roll, department: dept,
+    year: document.getElementById('a-year').value, phone, reason
+  });
+  if (r) { toast(r.message, 'success'); clearAllErrors(ids); loadAppStatus(); }
+}
+
+// ── FEES ──────────────────────────────────────
+async function loadFees() {
+  const fees = await fetchJSON('/api/student/fees');
+  const today = new Date(new Date().toDateString());
+  document.getElementById('feesTbody').innerHTML = fees?.length
+    ? fees.map(f => {
+        const isOverdue = f.status === 'pending' && new Date(f.due_date) < today;
+        const daysOver  = isOverdue ? Math.ceil((today - new Date(f.due_date)) / (1000*60*60*24)) : 0;
+        return `<tr style="${isOverdue ? 'background:rgba(255,99,99,.04)' : ''}">
+          <td>${f.description}</td>
+          <td><strong style="color:${isOverdue ? 'var(--coral)' : 'var(--teal)'};font-family:var(--mono)">₹${Number(f.amount).toLocaleString('en-IN')}</strong></td>
+          <td style="color:${isOverdue ? 'var(--coral)' : 'inherit'}">${fmtDate(f.due_date)}</td>
+          <td>
+            ${isOverdue
+              ? `<span class="badge b-rejected">overdue</span><div style="font-size:.68rem;color:var(--coral);margin-top:3px">${daysOver} day${daysOver>1?'s':''} late</div>`
+              : badge(f.status)}
+          </td>
+          <td>${f.paid_at ? fmtDate(f.paid_at) : '—'}</td>
+          <td>
+            ${f.status==='pending'
+              ? `<button class="btn btn-sm btn-green" onclick="payWithRazorpay(${f.id}, ${f.amount}, '${f.description.replace(/'/g,"\\'")}')">
+                  💳 Pay Now
+                </button>`
+              : `<div style="text-align:center">
+                  <span style="color:var(--green);font-size:.8rem">✅ Paid</span>
+                  ${f.razorpay_payment_id ? `<div style="font-size:.65rem;color:var(--muted);font-family:var(--mono)">${f.razorpay_payment_id}</div>` : ''}
+                </div>`}
+          </td>
+        </tr>`;
+      }).join('')
+    : `<tr><td colspan="6"><div class="empty"><div class="e-icon">💰</div><h4>No fee records</h4></div></td></tr>`;
+}
+
+// ── RAZORPAY PAYMENT ──────────────────────────
+async function payWithRazorpay(feeId, amount, description) {
+  // Step 1: Create order on backend
+  const order = await fetchJSON(`/api/student/fees/${feeId}/create-order`, 'POST', {});
+  if (!order) return;
+
+  // Step 2: Open Razorpay checkout
+  const options = {
+    key         : 'rzp_test_XXXXXXXXXXXXXXXX', // ← Replace with your Key ID
+    amount      : order.amount,
+    currency    : order.currency,
+    name        : 'HostelHub — JUIT',
+    description : description,
+    image       : 'https://i.imgur.com/n5tjHFD.png',
+    order_id    : order.order_id,
+    prefill     : {
+      name  : currentStudent?.name  || '',
+      email : currentStudent?.email || '',
+    },
+    theme       : { color: '#00c2bb' },
+    modal       : {
+      ondismiss: () => toast('Payment cancelled', 'info')
+    },
+    handler: async function(response) {
+      // Step 3: Verify payment on backend
+      const result = await fetchJSON(`/api/student/fees/${feeId}/verify-payment`, 'POST', {
+        razorpay_order_id  : response.razorpay_order_id,
+        razorpay_payment_id: response.razorpay_payment_id,
+        razorpay_signature : response.razorpay_signature,
+      });
+      if (result) {
+        toast(result.message, 'success');
+        loadFees();
+        loadDashboard();
+      }
+    }
+  };
+
+  const rzp = new window.Razorpay(options);
+  rzp.on('payment.failed', function(response) {
+    toast(`Payment failed: ${response.error.description}`, 'error');
+  });
+  rzp.open();
+}
+
+async function payFee(id) {
+  if(!confirm('Confirm payment?')) return;
+  const r = await fetchJSON(`/api/student/fees/${id}/pay`,'PUT',{});
+  if(r) { toast(r.message,'success'); loadFees(); loadDashboard(); }
+}
+
+// ── COMPLAINTS ────────────────────────────────
+function toggleComplaintForm() {
+  const p = document.getElementById('complaintFormPanel');
+  p.style.display = p.style.display==='none' ? '' : 'none';
+  if (p.style.display === 'none') clearError('c-desc');
+}
+
+async function loadComplaints() {
+  const cs = await fetchJSON('/api/student/complaints');
+  document.getElementById('complaintsTbody').innerHTML = cs?.length
+    ? cs.map(c=>`<tr>
+        <td><span style="text-transform:capitalize">🔹 ${c.category}</span></td>
+        <td style="max-width:200px;word-break:break-word">${c.description}</td>
+        <td>${badge(c.status)}</td>
+        <td>${c.visit_date?`${fmtDate(c.visit_date)} ${c.visit_time||''}`:'—'}</td>
+        <td>${fmtDate(c.created_at)}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="5"><div class="empty"><div class="e-icon">🔧</div><h4>No complaints</h4></div></td></tr>`;
+}
+
+async function raiseComplaint() {
+  clearError('c-desc');
+  const desc = document.getElementById('c-desc').value.trim();
+  if (!desc) { showError('c-desc', 'Description is required'); return; }
+  if (desc.length < 10) { showError('c-desc', 'Description must be at least 10 characters'); return; }
+  const body = { category: document.getElementById('c-cat').value, description: desc };
+  const r = await fetchJSON('/api/student/complaints', 'POST', body);
+  if (r) { toast(r.message, 'success'); toggleComplaintForm(); loadComplaints(); document.getElementById('c-desc').value = ''; }
+}
+
+// ── LEAVES ────────────────────────────────────
+function toggleLeaveForm() {
+  const p = document.getElementById('leaveFormPanel');
+  p.style.display = p.style.display==='none' ? '' : 'none';
+  if (p.style.display === 'none') clearAllErrors(['l-from','l-to','l-dest','l-reason']);
+}
+
+async function loadLeaves() {
+  const ls = await fetchJSON('/api/student/leaves');
+  document.getElementById('leavesTbody').innerHTML = ls?.length
+    ? ls.map(l=>`<tr>
+        <td>${fmtDate(l.from_date)}</td>
+        <td>${fmtDate(l.to_date)}</td>
+        <td style="max-width:140px;word-break:break-word">${l.reason}</td>
+        <td>${l.destination||'—'}</td>
+        <td>${badge(l.status)}</td>
+        <td style="color:var(--muted);font-size:.8rem">${l.remarks||'—'}</td>
+        <td>
+          ${l.status==='approved'
+            ? `<button class="btn btn-sm btn-secondary" onclick='printSlip(${JSON.stringify(l)})' style="display:flex;align-items:center;gap:5px">🖨️ Print Slip</button>`
+            : '—'}
+        </td>
+      </tr>`).join('')
+    : `<tr><td colspan="7"><div class="empty"><div class="e-icon">📅</div><h4>No leave requests</h4></div></td></tr>`;
+}
+
+async function requestLeave() {
+  const ids = ['l-from','l-to','l-dest','l-reason'];
+  clearAllErrors(ids);
+  const from   = document.getElementById('l-from').value;
+  const to     = document.getElementById('l-to').value;
+  const dest   = document.getElementById('l-dest').value.trim();
+  const reason = document.getElementById('l-reason').value.trim();
+  let valid = true;
+  if (!from) { showError('l-from', 'From date is required'); valid = false; }
+  else if (new Date(from) < new Date(new Date().toDateString())) { showError('l-from', 'From date cannot be in the past'); valid = false; }
+  if (!to) { showError('l-to', 'To date is required'); valid = false; }
+  else if (from && to && new Date(to) < new Date(from)) { showError('l-to', 'To date must be after From date'); valid = false; }
+  if (!dest)   { showError('l-dest',   'Destination is required'); valid = false; }
+  if (!reason) { showError('l-reason', 'Reason is required'); valid = false; }
+  if (!valid) return;
+  const r = await fetchJSON('/api/student/leaves', 'POST', { from_date: from, to_date: to, destination: dest, reason });
+  if (r) { toast(r.message, 'success'); toggleLeaveForm(); loadLeaves(); }
+}
+
+// ── PRINT SLIP ────────────────────────────────
+function printSlip(leave) {
+  const student = currentStudent || {};
+  const slipNo  = 'SLP-' + String(leave.id).padStart(4, '0');
+  const today   = new Date().toLocaleDateString('en-IN', {day:'2-digit', month:'long', year:'numeric'});
+  const fromD   = new Date(leave.from_date);
+  const toD     = new Date(leave.to_date);
+  const days    = Math.ceil((toD - fromD) / (1000 * 60 * 60 * 24)) + 1;
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Leave / Outpass Slip — ${slipNo}</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Segoe UI',Arial,sans-serif; color:#1a1a2e; background:#fff; padding:40px; }
+    .slip { max-width:720px; margin:0 auto; border:2px solid #1a1a2e; border-radius:4px; overflow:hidden; }
+
+    .slip-header { background:#1a1a2e; color:#fff; padding:24px 30px; display:flex; justify-content:space-between; align-items:center; }
+    .inst-name   { font-size:1.35rem; font-weight:700; letter-spacing:.02em; }
+    .inst-sub    { font-size:.75rem; opacity:.75; margin-top:2px; }
+    .slip-tag    { background:#4fd1c5; color:#1a1a2e; font-weight:800; font-size:.8rem; padding:6px 14px; border-radius:20px; letter-spacing:.08em; text-transform:uppercase; }
+
+    .slip-title  { background:#f0fdf4; border-bottom:2px dashed #1a1a2e; padding:14px 30px; display:flex; justify-content:space-between; align-items:center; }
+    .slip-title h2 { font-size:1.05rem; font-weight:700; color:#1a1a2e; text-transform:uppercase; letter-spacing:.06em; }
+    .slip-no     { font-size:.78rem; color:#555; font-family:monospace; }
+
+    .slip-body   { padding:28px 30px; }
+    .salutation  { font-size:.9rem; margin-bottom:20px; line-height:1.7; color:#333; }
+    .salutation strong { color:#1a1a2e; }
+
+    .info-grid   { display:grid; grid-template-columns:1fr 1fr; gap:0; border:1px solid #ddd; border-radius:4px; overflow:hidden; margin-bottom:22px; }
+    .info-cell   { padding:11px 16px; border-bottom:1px solid #ddd; border-right:1px solid #ddd; }
+    .info-cell:nth-child(2n) { border-right:none; }
+    .info-cell:nth-last-child(-n+2) { border-bottom:none; }
+    .info-label  { font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:#888; margin-bottom:3px; }
+    .info-val    { font-size:.9rem; font-weight:600; color:#1a1a2e; }
+
+    .date-strip  { background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px; padding:14px 20px; display:flex; justify-content:space-around; margin-bottom:22px; text-align:center; }
+    .date-item   { flex:1; }
+    .date-item + .date-item { border-left:1px solid #bfdbfe; }
+    .date-label  { font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:#3b82f6; margin-bottom:4px; }
+    .date-val    { font-size:1rem; font-weight:700; color:#1e3a8a; }
+    .days-badge  { background:#1a1a2e; color:#4fd1c5; font-weight:800; font-size:1.1rem; padding:2px 14px; border-radius:20px; display:inline-block; }
+
+    .conditions  { background:#fffbeb; border:1px solid #fde68a; border-radius:6px; padding:14px 18px; margin-bottom:22px; }
+    .conditions h4 { font-size:.75rem; text-transform:uppercase; letter-spacing:.07em; color:#92400e; margin-bottom:8px; }
+    .conditions ol { padding-left:18px; }
+    .conditions li { font-size:.78rem; color:#78350f; margin-bottom:4px; line-height:1.5; }
+
+    .slip-footer { background:#f8fafc; border-top:1px solid #e2e8f0; padding:10px 30px; display:flex; justify-content:space-between; align-items:center; }
+    .slip-footer span { font-size:.68rem; color:#94a3b8; }
+
+    @media print {
+      body { padding:10px; }
+      @page { margin:15mm; }
+    }
+  </style>
+</head>
+<body>
+<div class="slip">
+
+  <div class="slip-header">
+    <div>
+      <div class="inst-name">🏠 HostelHub — JUIT</div>
+      <div class="inst-sub">Jaypee University of Information Technology, Waknaghat</div>
+    </div>
+    <div class="slip-tag">Leave Slip</div>
+  </div>
+
+  <div class="slip-title">
+    <h2>Leave / Outpass Approval Letter</h2>
+    <div class="slip-no">Slip No: ${slipNo} &nbsp;|&nbsp; Issued: ${today}</div>
+  </div>
+
+  <div class="slip-body">
+
+    <p class="salutation">
+      This is to certify that the leave/outpass request submitted by
+      <strong>${student.name || leave.student_name || 'Student'}</strong>
+      has been <strong style="color:#16a34a">approved</strong> by the Hostel Warden.
+      The student is permitted to leave the hostel premises as per the details below.
+    </p>
+
+    <div class="info-grid">
+      <div class="info-cell">
+        <div class="info-label">Student Name</div>
+        <div class="info-val">${student.name || leave.student_name || '—'}</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">Roll Number</div>
+        <div class="info-val">${student.roll_no || '—'}</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">Department</div>
+        <div class="info-val">${student.department || '—'}</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">Room Number</div>
+        <div class="info-val">${student.room_number || '—'}</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">Hostel</div>
+        <div class="info-val">${student.hostel_name || '—'}</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">Contact / Phone</div>
+        <div class="info-val">${student.phone || '—'}</div>
+      </div>
+    </div>
+
+    <div class="date-strip">
+      <div class="date-item">
+        <div class="date-label">Departure Date</div>
+        <div class="date-val">${fmtDate(leave.from_date)}</div>
+      </div>
+      <div class="date-item">
+        <div class="date-label">Return Date</div>
+        <div class="date-val">${fmtDate(leave.to_date)}</div>
+      </div>
+      <div class="date-item">
+        <div class="date-label">Duration</div>
+        <div class="date-val"><span class="days-badge">${days} Day${days>1?'s':''}</span></div>
+      </div>
+    </div>
+
+    <div class="info-grid" style="margin-bottom:22px">
+      <div class="info-cell" style="grid-column:1/-1">
+        <div class="info-label">Destination</div>
+        <div class="info-val">${leave.destination || '—'}</div>
+      </div>
+      <div class="info-cell" style="grid-column:1/-1;border-bottom:none">
+        <div class="info-label">Purpose / Reason</div>
+        <div class="info-val" style="font-weight:400;font-size:.87rem">${leave.reason}</div>
+      </div>
+      ${leave.remarks ? `<div class="info-cell" style="grid-column:1/-1;border-bottom:none;background:#f0fdf4">
+        <div class="info-label" style="color:#166534">Warden's Remarks</div>
+        <div class="info-val" style="color:#15803d;font-style:italic;font-weight:400">"${leave.remarks}"</div>
+      </div>` : ''}
+    </div>
+
+    <div class="conditions">
+      <h4>⚠️ Conditions of Approval</h4>
+      <ol>
+        <li>The student must return to the hostel by <strong>${fmtDate(leave.to_date)}</strong> before 9:00 PM.</li>
+        <li>This slip must be shown to the security guard at the hostel gate while leaving and returning.</li>
+        <li>Any extension must be approved in advance by the warden in writing.</li>
+        <li>The student is responsible for their conduct during the leave period.</li>
+        <li>This slip is non-transferable and valid only for the student named above.</li>
+      </ol>
+    </div>
+
+  </div>
+
+  <div class="slip-footer">
+    <span>Generated by HostelHub &bull; ${today}</span>
+    <span>${slipNo} &bull; This is a computer-generated document</span>
+  </div>
+
+</div>
+<script>window.onload = () => { window.print(); }<\/script>
+</body>
+</html>`;
+
+  const win = window.open('', '_blank', 'width=800,height=700');
+  win.document.write(html);
+  win.document.close();
+}
+
+// ── ANNOUNCEMENTS ─────────────────────────────
+async function loadAnnouncements() {
+  const ann = await fetchJSON('/api/student/announcements');
+  const g = document.getElementById('announcementsGrid');
+  g.innerHTML = ann?.length
+    ? ann.map(a=>`<div class="panel" style="margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <h4 style="font-size:.95rem;font-weight:700">📢 ${a.title}</h4>
+          <small style="color:var(--muted)">${fmtDate(a.created_at)} · ${a.posted_by_name}</small>
+        </div>
+        <p style="font-size:.88rem;color:rgba(255,255,255,.8);line-height:1.65">${a.content}</p>
+      </div>`).join('')
+    : `<div class="empty"><div class="e-icon">📢</div><h4>No announcements</h4><p>Check back later</p></div>`;
+}
+
+// ── CHANGE PASSWORD ───────────────────────────
+document.addEventListener('input', function(e) {
+  if(e.target.id !== 'cp-new') return;
+  const val  = e.target.value;
+  const bar  = document.getElementById('strengthBar');
+  const text = document.getElementById('strengthText');
+  let strength = 0;
+  if(val.length >= 6)           strength++;
+  if(val.length >= 10)          strength++;
+  if(/[A-Z]/.test(val))         strength++;
+  if(/[0-9]/.test(val))         strength++;
+  if(/[^A-Za-z0-9]/.test(val))  strength++;
+  const levels = [
+    { w:'0%',c:'transparent',t:'' },{ w:'25%',c:'var(--coral)',t:'Weak' },
+    { w:'50%',c:'var(--gold)',t:'Fair' },{ w:'75%',c:'#4dd68c',t:'Good' },
+    { w:'100%',c:'var(--teal)',t:'Strong ✅' },
+  ];
+  bar.style.width=levels[strength].w; bar.style.background=levels[strength].c;
+  text.textContent=levels[strength].t; text.style.color=levels[strength].c;
+});
+
+async function changePassword() {
+  const old_password=document.getElementById('cp-old').value;
+  const new_password=document.getElementById('cp-new').value;
+  const confirm=document.getElementById('cp-confirm').value;
+  const msg=document.getElementById('cp-msg');
+  if(!old_password||!new_password||!confirm){msg.style.color='var(--coral)';msg.textContent='⚠️ Please fill all fields.';return;}
+  if(new_password!==confirm){msg.style.color='var(--coral)';msg.textContent='⚠️ Passwords do not match.';return;}
+  if(new_password.length<6){msg.style.color='var(--coral)';msg.textContent='⚠️ Min 6 characters required.';return;}
+  const r=await fetchJSON('/api/auth/change-password','POST',{old_password,new_password});
+  if(r){
+    msg.style.color='var(--teal)'; msg.textContent='✅ '+r.message;
+    document.getElementById('cp-old').value=''; document.getElementById('cp-new').value=''; document.getElementById('cp-confirm').value='';
+    setTimeout(async()=>{await fetch('/api/auth/logout',{method:'POST',credentials:'include'});window.location.href='login.html';},2000);
+  }
+}
+
+// ── HELPERS ───────────────────────────────────
+async function fetchJSON(url,method='GET',body=null){
+  try{
+    const opts={method,credentials:'include',headers:{'Content-Type':'application/json'}};
+    if(body) opts.body=JSON.stringify(body);
+    const r=await fetch(API+url,opts);
+    const d=await r.json();
+    if(!r.ok){
+      if(r.status===401||r.status===403){
+        window.location.href='login.html'; return null;
+      }
+      toast(d.message||'Something went wrong','error');
+      return null;
+    }
+    return d;
+  } catch(e){ toast('Server error','error'); return null; }
+}
+function badge(s){const m={pending:'b-pending',approved:'b-approved',rejected:'b-rejected',paid:'b-paid','in-progress':'b-inprogress',resolved:'b-resolved'};return `<span class="badge ${m[s]||''}">${s}</span>`;}
+function fmtDate(d){return d?new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—';}
+function toast(msg,type='info'){const c=document.getElementById('toast-container');const t=document.createElement('div');t.className=`toast t-${type}`;t.innerHTML=`<span>${type==='success'?'✅':type==='error'?'❌':'ℹ️'}</span> ${msg}`;c.appendChild(t);setTimeout(()=>t.remove(),3500);}
+
+init();
+
+// ── MOBILE SIDEBAR ────────────────────────────
+function toggleSidebar() {
+  const sb  = document.querySelector('.sidebar');
+  const btn = document.getElementById('hamburger');
+  const ov  = document.getElementById('sidebarOverlay');
+  const open = sb.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  ov.classList.toggle('show', open);
+  document.body.style.overflow = open ? 'hidden' : '';
+}
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('hamburger').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+document.querySelectorAll('.sidebar a').forEach(a =>
+  a.addEventListener('click', () => { if(window.innerWidth < 900) closeSidebar(); })
+);
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeSidebar(); });
+
+// ── SESSION TIMEOUT ───────────────────────────
+const INACTIVITY_LIMIT = 30 * 60 * 1000;
+const WARNING_BEFORE   =  1 * 60 * 1000;
+let inactivityTimer, countdownTimer, countdownVal;
+function resetInactivityTimer() {
+  clearTimeout(inactivityTimer);
+  inactivityTimer = setTimeout(showSessionWarning, INACTIVITY_LIMIT - WARNING_BEFORE);
+}
+function showSessionWarning() {
+  countdownVal = 60;
+  document.getElementById('sessionCountdown').textContent = countdownVal;
+  document.getElementById('sessionModal').classList.add('show');
+  countdownTimer = setInterval(() => {
+    countdownVal--;
+    document.getElementById('sessionCountdown').textContent = countdownVal;
+    if (countdownVal <= 0) { clearInterval(countdownTimer); sessionLogout(); }
+  }, 1000);
+}
+function keepSessionAlive() {
+  clearInterval(countdownTimer);
+  document.getElementById('sessionModal').classList.remove('show');
+  fetch('/api/auth/me', { credentials: 'include' });
+  resetInactivityTimer();
+}
+async function sessionLogout() {
+  clearInterval(countdownTimer);
+  document.getElementById('sessionModal').classList.remove('show');
+  await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+  window.location.href = 'login.html';
+}
+['mousemove','mousedown','keydown','touchstart','scroll','click'].forEach(e =>
+  document.addEventListener(e, resetInactivityTimer, { passive: true })
+);
+resetInactivityTimer();
+</script>
+<div class="modal-overlay" id="sessionModal"><div class="modal" style="text-align:center"><div style="font-size:2.5rem;margin-bottom:12px">⏰</div><h3 style="margin-bottom:8px">Session Expiring Soon</h3><p style="font-size:.87rem;color:var(--muted);margin-bottom:18px">You have been inactive. You will be logged out in<br><strong id="sessionCountdown" style="font-size:1.4rem;color:var(--coral)">60</strong> seconds.</p><div style="display:flex;gap:10px"><button class="btn btn-primary" style="flex:1" onclick="keepSessionAlive()">✅ Stay Logged In</button><button class="btn btn-secondary" style="flex:1" onclick="sessionLogout()">🚪 Logout Now</button></div></div></div></body>
+</html>
