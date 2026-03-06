@@ -1,6 +1,7 @@
 // backend/server.js
 const express      = require('express');
 const session      = require('express-session');
+require('./config/db');
 const cors         = require('cors');
 const path         = require('path');
 const helmet       = require('helmet');
